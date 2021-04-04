@@ -2,90 +2,90 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tags on Felix Hemmingsson</title>
-    <link>https://hfelix.se/tags/</link>
+    <link>https://www.hfelix.se/tags/</link>
     <description>Recent content in Tags on Felix Hemmingsson</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
-    <lastBuildDate>Mon, 24 Dec 2018 12:29:41 +0800</lastBuildDate><atom:link href="https://hfelix.se/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 24 Dec 2018 12:29:41 +0800</lastBuildDate><atom:link href="https://www.hfelix.se/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Demo</title>
-      <link>https://hfelix.se/tags/demo/</link>
+      <link>https://www.hfelix.se/tags/demo/</link>
       <pubDate>Mon, 24 Dec 2018 12:29:41 +0800</pubDate>
       
-      <guid>https://hfelix.se/tags/demo/</guid>
+      <guid>https://www.hfelix.se/tags/demo/</guid>
       <description></description>
     </item>
     
     <item>
       <title>Image</title>
-      <link>https://hfelix.se/tags/image/</link>
+      <link>https://www.hfelix.se/tags/image/</link>
       <pubDate>Mon, 24 Dec 2018 12:29:41 +0800</pubDate>
       
-      <guid>https://hfelix.se/tags/image/</guid>
+      <guid>https://www.hfelix.se/tags/image/</guid>
       <description></description>
     </item>
     
     <item>
       <title>Typography</title>
-      <link>https://hfelix.se/tags/typography/</link>
+      <link>https://www.hfelix.se/tags/typography/</link>
       <pubDate>Sat, 29 Sep 2018 11:36:33 +0800</pubDate>
       
-      <guid>https://hfelix.se/tags/typography/</guid>
+      <guid>https://www.hfelix.se/tags/typography/</guid>
       <description></description>
     </item>
     
     <item>
       <title>development</title>
-      <link>https://hfelix.se/tags/development/</link>
+      <link>https://www.hfelix.se/tags/development/</link>
       <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
       
-      <guid>https://hfelix.se/tags/development/</guid>
+      <guid>https://www.hfelix.se/tags/development/</guid>
       <description></description>
     </item>
     
     <item>
       <title>go</title>
-      <link>https://hfelix.se/tags/go/</link>
+      <link>https://www.hfelix.se/tags/go/</link>
       <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
       
-      <guid>https://hfelix.se/tags/go/</guid>
+      <guid>https://www.hfelix.se/tags/go/</guid>
       <description></description>
     </item>
     
     <item>
       <title>golang</title>
-      <link>https://hfelix.se/tags/golang/</link>
+      <link>https://www.hfelix.se/tags/golang/</link>
       <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
       
-      <guid>https://hfelix.se/tags/golang/</guid>
+      <guid>https://www.hfelix.se/tags/golang/</guid>
       <description></description>
     </item>
     
     <item>
       <title>hugo</title>
-      <link>https://hfelix.se/tags/hugo/</link>
+      <link>https://www.hfelix.se/tags/hugo/</link>
       <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
       
-      <guid>https://hfelix.se/tags/hugo/</guid>
+      <guid>https://www.hfelix.se/tags/hugo/</guid>
       <description></description>
     </item>
     
     <item>
       <title>templates</title>
-      <link>https://hfelix.se/tags/templates/</link>
+      <link>https://www.hfelix.se/tags/templates/</link>
       <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
       
-      <guid>https://hfelix.se/tags/templates/</guid>
+      <guid>https://www.hfelix.se/tags/templates/</guid>
       <description></description>
     </item>
     
     <item>
       <title>themes</title>
-      <link>https://hfelix.se/tags/themes/</link>
+      <link>https://www.hfelix.se/tags/themes/</link>
       <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
       
-      <guid>https://hfelix.se/tags/themes/</guid>
+      <guid>https://www.hfelix.se/tags/themes/</guid>
       <description></description>
     </item>
     
