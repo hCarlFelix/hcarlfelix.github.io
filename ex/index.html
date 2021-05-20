@@ -13329,7 +13329,7 @@ $$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># %% Main: ODE Solver calls function &#39;MKMCoverages_P3&#39; %%%</span>
@@ -13390,19 +13390,6 @@ $$
         <span class="k">for</span> <span class="n">temp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">423</span><span class="p">,</span><span class="mi">683</span><span class="p">,</span><span class="mi">10</span><span class="p">):</span>
             <span class="n">AlvModel</span><span class="o">.</span><span class="n">fC</span><span class="p">,</span> <span class="n">AlvModel</span><span class="o">.</span><span class="n">bC</span> <span class="o">=</span> <span class="n">constants</span><span class="p">(</span><span class="n">pa</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
             <span class="n">ans2</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">solve_ivp</span><span class="p">(</span><span class="n">AlvModel</span><span class="o">.</span><span class="n">reaction</span><span class="p">,</span> <span class="p">[</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">],</span> <span class="n">x0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;BDF&#39;</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">RelTol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">AbsTol</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
 </pre></div>
 
     </div>
