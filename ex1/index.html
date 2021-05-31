@@ -13069,28 +13069,1283 @@ div#notebook {
         }
     });
     </script>
-    <!-- End of mathjax configuration --></head>
+    <!-- End of mathjax configuration -->
+
+<style type="text/css">
+    
+/* no local copies of fontawesome fonts in basic templates, so use cdn */
+@import url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css)
+
+    </style>
+<style type="text/css">
+    .collapsible_headings_toggle .h1 {
+  font-size: 185.7%;
+  margin: 0.538em 0 0 0;
+  line-height: 1.0;
+}
+.collapsible_headings_toggle .h2 {
+  font-size: 157.1%;
+  margin: 0.636em 0 0 0;
+  line-height: 1.0;
+}
+.collapsible_headings_toggle .h3 {
+  font-size: 128.6%;
+  margin: 0.777em 0 0 0;
+  line-height: 1.0;
+}
+.collapsible_headings_toggle .h4,
+.collapsible_headings_toggle .h5,
+.collapsible_headings_toggle .h6 {
+  font-size: 100%;
+  margin: 1em 0 0 0;
+  line-height: 1.0;
+}
+
+.collapsible_headings_toggle.btn .h1,
+.collapsible_headings_toggle.btn .h2,
+.collapsible_headings_toggle.btn .h3,
+.collapsible_headings_toggle.btn .h4,
+.collapsible_headings_toggle.btn .h5,
+.collapsible_headings_toggle.btn .h6 {
+  margin-top: 0;
+}
+
+.collapsible_headings_toggle .fa {
+	transition: transform 400ms;
+
+  /* don't support IE filter, since can't rotate 360 */
+	-webkit-transform: rotate(360deg);
+	-moz-transform: rotate(360deg);
+	-ms-transform: rotate(360deg);
+	-o-transform: rotate(360deg);
+	transform: rotate(360deg);
+}
+
+.collapsible_headings_collapsed .fa {
+	-webkit-transform: none;
+	-moz-transform: none;
+	-ms-transform: none;
+	-o-transform: none;
+	transform: none;
+}
+
+/* bracket rules */
+
+div.cell {
+  position: relative;
+}
+
+.chb {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: calc(100% + 3px);
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.chb div {
+  margin-left: 2px;
+  width: 5px;
+  border-color: #aaa;
+  border-left-color: transparent;
+  border-style: solid;
+  border-width: 0 2px 0 2px;
+}
+
+.collapsible_headings_collapsed .chb .chb-start {
+  border-width: 5px 2px 2px 4px;
+}
+
+.chb div:hover, 
+.chb .chb-hover, 
+.jupyter-soft-selected .chb div{
+    border-color:  #42A5F5;
+    border-left-color: transparent;
+	  border-width: 0 3px 0 0;
+}
+
+.chb .chb-start {
+  border-top-width: 1px;
+  margin-top: 2px;
+}
+
+.chb .chb-end {
+  border-bottom-width: 1px;
+  margin-bottom: 2px;
+}
+
+.chb-start div:hover, .chb .chb-start.chb-hover, .jupyter-soft-selected .chb .chb-start {
+  border-top-width: 2px;
+}
+
+.chb-end div:hover, .chb .chb-end.chb-hover, .jupyter-soft-selected .chb .chb-end {
+  border-bottom-width: 2px;
+}
+
+/* ellipsis rules */
+.collapsible_headings_ellipsis .rendered_html h1,
+.collapsible_headings_ellipsis .rendered_html h2,
+.collapsible_headings_ellipsis .rendered_html h3,
+.collapsible_headings_ellipsis .rendered_html h4,
+.collapsible_headings_ellipsis .rendered_html h5,
+.collapsible_headings_ellipsis .rendered_html h6 {
+  position: relative;
+  padding-right: 2em;
+}
+
+.collapsible_headings_collapsed.collapsible_headings_ellipsis .rendered_html h1:after,
+.collapsible_headings_collapsed.collapsible_headings_ellipsis .rendered_html h2:after,
+.collapsible_headings_collapsed.collapsible_headings_ellipsis .rendered_html h3:after,
+.collapsible_headings_collapsed.collapsible_headings_ellipsis .rendered_html h4:after,
+.collapsible_headings_collapsed.collapsible_headings_ellipsis .rendered_html h5:after,
+.collapsible_headings_collapsed.collapsible_headings_ellipsis .rendered_html h6:after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  content: "[\002026]";
+  color: #aaa;
+}
+    </style>
+
+
+<script type="text/javascript">
+    (requirejs.specified('base/js/namespace') ? define : function (deps, callback) {
+	// if here, the Jupyter namespace hasn't been specified to be loaded.
+	// This means that we're probably embedded in a page, so we need to make
+	// our definition with a specific module name
+	"use strict";
+	return define('nbextensions/collapsible_headings/main', deps, callback);
+})(['jquery', 'require'], function ($, requirejs) {
+	"use strict";
+
+	var mod_name = 'collapsible_headings';
+	var log_prefix = '[' + mod_name + ']';
+	var action_names = { // set on registration
+		insert_above: '',
+		insert_below: '',
+		collapse: '',
+		uncollapse: '',
+		select: ''
+	};
+	var select_reveals = true; // used as a flag to prevent selecting a heading section from also opening it
+
+	// define default values for config parameters
+	var params = {
+		add_button : false,
+		add_all_cells_button: false,
+		add_insert_header_buttons: false,
+		use_toggle_controls : true,
+		make_toggle_controls_buttons : false,
+		size_toggle_controls_by_level : true,
+		toggle_open_icon : 'fa-caret-down',
+		toggle_closed_icon : 'fa-caret-right',
+		toggle_color : '#aaaaaa',
+		use_shortcuts : true,
+		shortcuts: {
+			collapse: 'left',
+			collapse_all: 'ctrl-shift-left',
+			uncollapse: 'right',
+			uncollapse_all: 'ctrl-shift-right',
+			select: 'shift-right',
+			insert_above: 'shift-a',
+			insert_below: 'shift-b',
+		},
+		show_section_brackets : false,
+		section_bracket_width : 10,
+		show_ellipsis : true,
+		select_reveals : true,
+		collapse_to_match_toc: false,
+		indent_px: 8,
+	};
+
+	// ------------------------------------------------------------------------
+	// Jupyter is used when we're in a live notebook, but in non-live notebook
+	// settings, it remains undefined.
+	// It is declared here to allow us to keep logic for live/nonlive functions
+	// together.
+	var Jupyter;
+	// similarly, in a live notebook, events is the Jupyter global events
+	// object, but in a non-live notebook, we must construct our own version
+	var events;
+	try {
+		events = requirejs('base/js/events');
+	}
+	catch (err) {
+		// in non-live notebook, there's no events structure, so we make our own
+		if (window.events === undefined) {
+			var Events = function () {};
+			window.events = $([new Events()]);
+		}
+		events = window.events;
+	}
+
+	// global flag denoting whether we're in a live notebook or exported html.
+	// In a live notebook we operate on Cell instances, in exported html we
+	// operate on jQuery collections of '.cell' elements
+	var live_notebook = false;
+
+
+	//  Some functions providing things akin to Jupyter.notebook methods, but
+	//  which can work using jQuery collections in place of Cell instances.
+
+	/**
+	 *  Return all cells in the notebook (or cell elements if notebook not live)
+	 */
+	function _get_cells () {
+		return live_notebook ? Jupyter.notebook.get_cells() : $('#notebook-container > .cell');
+	}
+
+	/**
+	 *  Return cell at index index (or cell element if notebook not live)
+	 */
+	function _get_cell_at_index (index) {
+		return live_notebook ? Jupyter.notebook.get_cell(index) : $('.cell').eq(index);
+	}
+
+	/**
+	 *  Return the index of the given cell (or cell element if notebook not live)
+	 */
+	function _find_cell_index (cell) {
+		return live_notebook ? Jupyter.notebook.find_cell_index(cell) : $(cell).index();
+	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Return the level of nbcell.
+	 * The cell level is an integer in the range 1-7 inclusive
+	 *
+	 * @param {Object} cell Cell instance or jQuery collection of '.cell' elements
+	 * @return {Integer} cell level
+	 */
+	function get_cell_level (cell) {
+		// headings can have a level up to 6, so 7 is used for a non-heading
+		var level = 7;
+		if (cell === undefined) {
+			return level;
+		}
+		if (live_notebook) {
+			if ((typeof(cell) === 'object')  && (cell.cell_type === 'markdown')) {
+			level = cell.get_text().match(/^#*/)[0].length || level;
+			}
+		}
+		else {
+			// the jQuery pseudo-selector :header is useful for us, but is
+			// implemented in javascript rather than standard css selectors,
+			// which get implemented in native browser code.
+			// So we get best performance by using css-native first, then filtering
+			var only_child_header = $(cell).find(
+				'.inner_cell > .rendered_html > :only-child'
+			).filter(':header');
+			if (only_child_header.length > 0) {
+				level = Number(only_child_header[0].tagName.substring(1));
+			}
+		}
+		return Math.min(level, 7); // we rely on 7 being max
+	}
+
+	/**
+	 * Check if a cell is a heading cell.
+	 *
+	 * @param {Object} cell Cell instance or jQuery collection of '.cell' elements
+	 * @return {Boolean}
+	 */
+	function is_heading (cell) {
+		return get_cell_level(cell) < 7;
+	}
+
+	/**
+	 *  Check if a heading cell is collapsed.
+	 *
+	 *  Should in general return false on non-heading cells, but this is
+	 *  dependent on metadata/css classes, so don't rely on it.
+	 *
+	 * @param {Object} cell Cell instance or jQuery collection of '.cell' elements
+	 * @return {Boolean}
+	 */
+	function _is_collapsed (heading_cell) {
+		if (live_notebook) {
+			return heading_cell.metadata.heading_collapsed === true;
+		}
+		return $(heading_cell).hasClass('collapsible_headings_collapsed');
+	}
+
+	/**
+	 *  Alter cell so that _is_collapsed called on it will return set_collapsed
+	 */
+	function _set_collapsed (heading_cell, set_collapsed) {
+		set_collapsed = set_collapsed !== undefined ? set_collapsed : true;
+		if (live_notebook) {
+			if (set_collapsed) {
+				heading_cell.metadata.heading_collapsed = true;
+			}
+			else {
+				delete heading_cell.metadata.heading_collapsed;
+			}
+		}
+		else {
+			$(heading_cell).toggleClass('collapsible_headings_collapsed', set_collapsed);
+		}
+		return set_collapsed;
+	}
+
+	/**
+	 * Check if a cell is a collapsed heading cell.
+	 *
+	 * @param {Object} cell Cell instance or jQuery collection of '.cell' elements
+	 * @return {Boolean}
+	 */
+	function is_collapsed_heading (cell) {
+		return is_heading(cell) && _is_collapsed(cell);
+	}
+
+	/**
+	 * Uncollapse any headings which are hiding the cell at index
+	 *
+	 * @param {Integer} index - index of cell to reveal
+	 */
+	function reveal_cell_by_index (index) {
+		// Restrict the search to cells that are of the same level and lower
+		// than the currently selected cell by index.
+		var ref_cell = _get_cell_at_index(index);
+		// ref_cell may be null, if we've attempted to extend selection beyond
+		// the existing cells
+		if (!ref_cell) {
+			return;
+		}
+		var pivot_level = get_cell_level(ref_cell);
+		var cells = _get_cells();
+		while (index > 0 && pivot_level > 1) {
+			index--;
+			var cell = cells[index];
+			var cell_level = get_cell_level(cell);
+			if (cell_level < pivot_level) {
+				if (is_collapsed_heading(cell)) {
+					toggle_heading(cell);
+				}
+				pivot_level = cell_level;
+			}
+		}
+	}
+
+	/**
+	 * Add or remove collapsed/uncollapsed classes & metadata to match the
+	 * cell's status as a non-heading or collapsed/uncollapsed heading
+	 *
+	 * @param {Object} cell Cell instance or jQuery collection of '.cell' elements
+	 * @return {undefined}
+	 */
+	function update_heading_cell_status (cell) {
+		var level = get_cell_level(cell);
+		var cell_is_heading = level < 7;
+		var cell_elt = live_notebook ? cell.element : $(cell);
+		var cht = cell_elt.find('.input_prompt > .collapsible_headings_toggle');
+		if (cell_is_heading) {
+			var collapsed = _is_collapsed(cell);
+			cell_elt.toggleClass('collapsible_headings_collapsed', collapsed);
+			cell_elt.toggleClass('collapsible_headings_ellipsis', params.show_ellipsis);
+			if (params.use_toggle_controls) {
+				if (cht.length < 1) {
+					cht = $('<div/>')
+						.addClass('collapsible_headings_toggle')
+						.css('color', params.toggle_color)
+						.append('<div><i class="fa fa-fw"></i></div>')
+						.appendTo(cell_elt.find('.input_prompt'));
+					var clickable = cht.find('i');
+					if (params.make_toggle_controls_buttons) {
+						cht.addClass('btn btn-default');
+						clickable = cht;
+					}
+					if (live_notebook) {
+						clickable.on('click', function () { toggle_heading(cell); });
+					}
+					else {
+						// in non-live notebook, cell isn;t editable, so make it clickable also
+						var only_child_header = cell_elt.find(
+							'.inner_cell > .rendered_html > :only-child'
+						).filter(':header');
+						clickable.add(only_child_header)
+							.css('cursor', 'pointer')
+							.on('click', function (evt) {
+								// evt.target is what was clicked, not what the handler was attached to
+								if (!$(evt.target).hasClass('anchor-link')) {
+									toggle_heading(cell);
+								}
+							});
+					}
+				}
+				// Update the cell's toggle control classes
+				var hwrap = cht.children();
+				hwrap.find('.fa')
+					.toggleClass(params.toggle_closed_icon, collapsed)
+					.toggleClass(params.toggle_open_icon, !collapsed);
+				if (params.size_toggle_controls_by_level) {
+					for (var hh = 1; hh < 7; hh++) {
+						hwrap.toggleClass('h' + hh, hh == level);
+					}
+				}
+			}
+		}
+		else {
+			_set_collapsed(cell, false);
+			cell_elt.removeClass('collapsible_headings_collapsed');
+			cht.remove();
+		}
+	}
+
+	/**
+	 * find the closest header cell to input cell
+	 *
+	 * @param {Object} cell Cell instance or jQuery collection of '.cell' elements
+	 * @param {Function} a function to filter which header cells can be
+	 *                   returned. Should take a notebook cell/jquer element as
+	 *                   input (depending on whether we're in a live notebook),
+	 *                   and return true if the given cell is acceptable.
+	 * @return {Object | undefined}
+	 */
+	function find_header_cell (cell, test_func) {
+		var index = _find_cell_index(cell);
+		for (; index >= 0; index--) {
+			cell = _get_cell_at_index(index);
+			if (is_heading(cell) && (test_func === undefined || test_func(cell))) {
+				return cell;
+			}
+		}
+		return undefined;
+	}
+
+	/**
+	 *  Select the section enclosed by the given heading cell.
+	 *
+	 *  Only callable from a live notebook, so require no special cell handling
+	 *
+	 *  @param {Object} head_cell Cell instance or jQuery collection of '.cell' elements
+	 *  @return {undefined}
+	 */
+	function select_heading_section(head_cell, extend) {
+		var head_lvl = get_cell_level(head_cell);
+		var ncells = Jupyter.notebook.ncells();
+		var head_ind = _find_cell_index(head_cell);
+		var tail_ind;
+		for (tail_ind = head_ind; tail_ind + 1 < ncells; tail_ind++) {
+			if (get_cell_level(_get_cell_at_index(tail_ind + 1)) <= head_lvl) {
+				break;
+			}
+		}
+		select_reveals = params.select_reveals;
+		if (extend) {
+			var ank_ind = Jupyter.notebook.get_anchor_index();
+			if (ank_ind <= head_ind) {
+				// keep current anchor, extend to head
+				Jupyter.notebook.select(tail_ind, false);
+				select_reveals = true;
+				return;
+			}
+			else if (ank_ind >= tail_ind) {
+				// keep current anchor, extend to tail
+				Jupyter.notebook.select(head_ind, false);
+				select_reveals = true;
+				return;
+			}
+			// head_ind < ank_ind < tail_ind i.e. anchor is inside section
+		}
+		// move_anchor to header cell
+		Jupyter.notebook.select(head_ind, true);
+		// don't move anchor, i.e. extend, to tail cell
+		Jupyter.notebook.select(tail_ind, false);
+		select_reveals = true;
+	}
+
+	/**
+	 *  Return all of the cell _elements _which are part of the section headed by
+	 *  the given cell
+	 *
+	 *  @param {Object} head_cell Cell instance or jQuery collection of '.cell' elements
+	 */
+	function get_jquery_bracket_section (head_cell) {
+		var head_lvl = get_cell_level(head_cell);
+		var cells = _get_cells();
+		var cell_elements = $(live_notebook ? head_cell.element : head_cell);
+		for (var ii = _find_cell_index(head_cell); ii < cells.length; ii++) {
+			var cell = live_notebook ? cells[ii] : cells.eq(ii);
+
+			if (get_cell_level(cell) <= head_lvl) {
+				break;
+			}
+			cell_elements = cell_elements.add(live_notebook ? cell.element : cell);
+		}
+		return cell_elements;
+	}
+
+	/**
+	 * Callback function attached to the bracket-containing div, should toggle
+	 * the relevant heading
+	 */
+	var bracket_callback_timeout_id;
+	function bracket_callback (evt) {
+		// prevent bubbling, otherwise when closing a section, the cell gets
+		// selected & re-revealed after being hidden
+		evt.preventDefault();
+		evt.stopPropagation();
+		// evt.target is what was clicked, not what the handler was attached to
+		var bracket = $(evt.target);
+		var bracket_level = Number(bracket.attr('data-bracket-level'));
+		if (bracket_level) {
+			var bracket_cell = live_notebook ? bracket.closest('.cell').data('cell') : bracket.closest('.cell');
+			var header_cell = find_header_cell(bracket_cell, function (cell) {
+				return get_cell_level(cell) == bracket_level;
+			});
+			switch (evt.type) {
+				case 'dblclick':
+					clearTimeout(bracket_callback_timeout_id);
+					bracket_callback_timeout_id = undefined;
+					toggle_heading(header_cell);
+					break;
+				case 'click':
+					if (live_notebook && (bracket_callback_timeout_id === undefined)) {
+						bracket_callback_timeout_id = setTimeout(function () {
+							select_heading_section(header_cell, evt.shiftKey);
+							bracket_callback_timeout_id = undefined;
+						}, 300);
+					}
+					break;
+				case 'mouseenter':
+				case 'mouseleave':
+					var in_section = get_jquery_bracket_section(header_cell)
+						.find('.chb div[data-bracket-level=' + bracket_level + ']');
+					$('.chb div').not(in_section).removeClass('chb-hover');
+					in_section.toggleClass('chb-hover', evt.type === 'mouseenter');
+					break;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Update the hidden/collapsed status of all the cells under
+	 * - the notebook, if param cell === undefined
+	 * - the heading which contains the specified cell (if cell !== undefined,
+	 *   but is also not a heading)
+	 * - the specified heading cell (if specified cell is a heading)
+	 *
+	 * @param {Object} cell Cell instance or jQuery collection of '.cell' elements
+	 * @return {undefined}
+	 */
+	function update_collapsed_headings (cell) {
+		var index = 0;
+		var section_level = 0;
+		var show = true;
+		if (cell !== undefined && (cell = find_header_cell(cell)) !== undefined) {
+			index = _find_cell_index(cell) + 1;
+			section_level = get_cell_level(cell);
+			show = !_is_collapsed(cell);
+		}
+		var hide_above = 7;
+		var brackets_open = {};
+		var max_open = 0; // count max number open at one time to calc padding
+		for (var cells = _get_cells(); index < cells.length; index++) {
+			cell = cells[index];
+			var cell_elt = live_notebook ? cell.element : $(cell);
+			var level = get_cell_level(cell);
+			if (level <= section_level) {
+				break;
+			}
+			if (show && level <= hide_above) {
+				cell_elt.slideDown('fast');
+				hide_above = is_collapsed_heading(cell) ? level : 7;
+				if (live_notebook) {
+					delete cell.metadata.hidden;
+				}
+			}
+			else {
+				cell_elt.slideUp('fast');
+				if (live_notebook) {
+					cell.metadata.hidden = true;
+				}
+				continue;
+			}
+
+			if (params.show_section_brackets) {
+				var chb = cell_elt.find('.chb').empty();
+				if (chb.length < 1) {
+					chb = $('<div/>')
+						.addClass('chb')
+						.on('click dblclick', bracket_callback)
+						.appendTo(cell_elt);
+				}
+				var num_open = 0; // count number of brackets currently open
+				for (var jj = 1; jj < 7; jj++) {
+					if (brackets_open[jj] && level <= jj) {
+						brackets_open[jj].addClass('chb-end'); // closing, add class
+						delete brackets_open[jj]; // closed
+					}
+					var opening = level == jj;
+					if (brackets_open[jj] || opening) {
+						num_open++;
+						brackets_open[jj] = $('<div/>')
+							.on('mouseenter mouseleave', bracket_callback)
+							.attr('data-bracket-level', jj)
+							.appendTo(chb); // add bracket element
+						if (opening) { // opening, add class
+							brackets_open[jj].addClass('chb-start');
+						}
+					}
+				}
+				max_open = Math.max(num_open, max_open);
+			}
+		}
+		if (params.show_section_brackets) {
+			// close any remaining
+			for (var ii in brackets_open) {
+				brackets_open[ii].addClass('chb-end');
+			}
+			// adjust padding to fit in brackets
+			var bwidth = params.section_bracket_width;
+			var dwidth = max_open * (2 + bwidth);
+			$('#notebook-container').css('padding-right', (16 + dwidth) + 'px');
+			$('.chb')
+				.css('right', '-' + (3 + dwidth) + 'px')
+				.find('div')
+					.css('width', bwidth);
+		}
+	}
+
+	/**
+	 * Hide/reveal all cells in the section headed by cell.
+	 *
+	 * @param {Object} cell Cell instance or jQuery collection of '.cell' elements
+	 */
+	function toggle_heading (cell, set_collapsed, trigger_event) {
+		if (is_heading(cell)) {
+			if (set_collapsed === undefined) {
+				set_collapsed = !_is_collapsed(cell);
+			}
+			_set_collapsed(cell, set_collapsed);
+			update_heading_cell_status(cell);
+			update_collapsed_headings(params.show_section_brackets ? undefined : cell);
+			console.log(log_prefix, set_collapsed ? 'collapsed' : 'expanded', 'cell', _find_cell_index(cell));
+			if (trigger_event !== false) {
+				events.trigger((set_collapsed ? '' : 'un') + 'collapse.CollapsibleHeading', {cell: cell});
+			}
+		}
+	}
+
+	/**
+	 *  Return a promise which resolves when the Notebook class methods have
+	 *  been appropriately patched.
+	 *  Patches methods
+	 *   - Notebook.select
+	 *   - Notebook.undelete
+	 *
+	 *  @return {Promise}
+	 */
+	function patch_Notebook () {
+		return new Promise(function (resolve, reject) {
+			requirejs(['notebook/js/notebook'], function on_success (notebook) {
+				console.debug(log_prefix, 'patching Notebook.protoype');
+
+				// we have to patch select, since the select.Cell event is only fired
+				// by cell click events, not by the notebook select method
+				var orig_notebook_select = notebook.Notebook.prototype.select;
+				notebook.Notebook.prototype.select = function (index, moveanchor) {
+					if (select_reveals) {
+						reveal_cell_by_index(index);
+					}
+					return orig_notebook_select.apply(this, arguments);
+				};
+				resolve();
+			}, reject);
+		}).catch(function on_reject (reason) {
+			console.warn(log_prefix, 'error patching Notebook.protoype:', reason);
+		});
+	}
+
+	/**
+	 *  Return a promise which resolves when the TextCell class methods have
+	 *  been appropriately patched.
+	 *
+	 *  Patches TextCell.set_text to update headings.
+	 *  This is useful for undelete and copy/paste of cells, which don't fire
+	 *  markdown.
+	 *
+	 *  @return {Promise}
+	 */
+	function patch_TextCell () {
+		return new Promise(function (resolve, reject) {
+			requirejs(['notebook/js/textcell'], function on_success (textcell) {
+				console.debug(log_prefix, 'patching TextCell.protoype');
+				var orig_set_text = textcell.TextCell.prototype.set_text;
+				textcell.TextCell.prototype.set_text = function (text) {
+					var ret = orig_set_text.apply(this, arguments);
+					if (Jupyter.notebook._fully_loaded) {
+						update_heading_cell_status(this);
+						update_collapsed_headings();
+					}
+					return ret;
+				};
+				resolve();
+			}, reject);
+		}).catch(function on_reject (reason) {
+			console.warn(log_prefix, 'error patching TextCell.protoype:', reason);
+		});
+	}
+
+	/**
+	 *  Return a promise which resolves when the Tooltip class methods have
+	 *  been appropriately patched.
+	 *
+	 *  For notebook 4.x, cells had css position:static, and changing them to
+	 *  relative to get heading brackets working broke the tooltip position
+	 *  calculation. In order to fix this, we patch the 4.x Tooltip._show
+	 *  method to temporarily reapply position:static while the tooltip
+	 *  position is calculated & the animation queued, before revertign to the
+	 *  css-appled position:relative.
+	 *	For notebook 5.x, cells are already position:relative, so the patch is
+	 *  unecessary.
+	 *
+	 *  @return {Promise}
+	 */
+	function patch_Tooltip () {
+		if (Number(Jupyter.version[0]) >= 5) {
+			return Promise.resolve();
+		}
+		return new Promise(function (resolve, reject) {
+			requirejs(['notebook/js/tooltip'], function on_success (tooltip) {
+				console.debug(log_prefix, 'patching Tooltip.prototype');
+
+				var orig_tooltip__show = tooltip.Tooltip.prototype._show;
+				tooltip.Tooltip.prototype._show = function (reply) {
+					var $cell = $(this.code_mirror.getWrapperElement()).closest('.cell');
+					$cell.css('position', 'static');
+					var ret = orig_tooltip__show.apply(this, arguments);
+					$cell.css('position', '');
+					return ret;
+				};
+
+				resolve();
+			}, reject);
+		}).catch(function on_reject (reason) {
+			console.warn(log_prefix, 'error patching Tooltip.prototype:', reason);
+		});
+	}
+
+	/**
+	 *  Return a promise which resolves when the appropriate Jupyter actions
+	 *  have been patched correctly.
+	 *
+	 *  We patch the up/down arrow actions to skip selecting cells which are
+	 *  hidden by a collapsed heading
+	 *
+	 *  @return {Promise}
+	 */
+	function patch_actions () {
+		return new Promise(function (resolve, reject) {
+			requirejs(['notebook/js/tooltip'], function on_success (tooltip) {
+				console.debug(log_prefix, 'patching Jupyter up/down actions');
+
+				var kbm = Jupyter.keyboard_manager;
+
+				var action_up = kbm.actions.get("jupyter-notebook:select-previous-cell");
+				var orig_up_handler = action_up.handler;
+				action_up.handler = function (env) {
+					for (var index = env.notebook.get_selected_index() - 1; (index !== null) && (index >= 0); index--) {
+						if (env.notebook.get_cell(index).element.is(':visible')) {
+							env.notebook.select(index);
+							env.notebook.focus_cell();
+							return;
+						}
+					}
+					return orig_up_handler.apply(this, arguments);
+				};
+
+				var action_down = kbm.actions.get("jupyter-notebook:select-next-cell");
+				var orig_down_handler = action_down.handler;
+				action_down.handler = function (env) {
+					var ncells = env.notebook.ncells();
+					for (var index = env.notebook.get_selected_index() + 1; (index !== null) && (index < ncells); index++) {
+						if (env.notebook.get_cell(index).element.is(':visible')) {
+							env.notebook.select(index);
+							env.notebook.focus_cell();
+							return;
+						}
+					}
+					return orig_down_handler.apply(this, arguments);
+				};
+
+				resolve();
+			}, reject);
+		}).catch(function on_reject (reason) {
+			console.warn(log_prefix, 'error patching Jupyter up/down actions:', reason);
+		});
+	}
+
+	/**
+	 * register actions to collapse and uncollapse the selected heading cell
+	 */
+	function register_new_actions () {
+		action_names.collapse = Jupyter.keyboard_manager.actions.register({
+				handler : function (env) {
+					var cell = env.notebook.get_selected_cell();
+					var is_h = is_heading(cell);
+					if (is_h && !_is_collapsed(cell)) {
+						toggle_heading(cell, true);
+						return;
+					}
+					var filter_func;
+					if (is_h) {
+						var lvl = get_cell_level(cell);
+						filter_func = function (c) { return get_cell_level(c) < lvl; };
+					}
+					cell = find_header_cell(cell, filter_func);
+					if (cell !== undefined) {
+						Jupyter.notebook.select(Jupyter.notebook.find_cell_index(cell));
+						cell.focus_cell();
+					}
+				},
+				help : "Collapse the selected heading cell's section",
+				icon : params.toggle_closed_icon,
+				help_index: 'c1'
+			},
+			'collapse_heading', mod_name
+		);
+
+		action_names.collapse_all = Jupyter.keyboard_manager.actions.register({
+				handler : function (env) {
+					env.notebook.get_cells().forEach(function (c, idx, arr) {
+						toggle_heading(c, true);
+					});
+					var cell = env.notebook.get_selected_cell();
+					if (cell.element.is(':hidden')) {
+						cell = find_header_cell(cell, function (c) { return c.element.is(':visible'); });
+						if (cell !== undefined) {
+							Jupyter.notebook.select(Jupyter.notebook.find_cell_index(cell));
+							cell.focus_cell();
+						}
+					}
+				},
+				help : "Collapse all heading cells' sections",
+				icon : params.toggle_closed_icon,
+				help_index: 'c2'
+			},
+			'collapse_all_headings', mod_name
+		);
+
+		action_names.uncollapse = Jupyter.keyboard_manager.actions.register({
+				handler : function (env) {
+					var cell = env.notebook.get_selected_cell();
+					if (is_heading(cell)) {
+						toggle_heading(cell, false);
+					}
+					else {
+						var ncells = env.notebook.ncells();
+						for (var ii = env.notebook.find_cell_index(cell); ii < ncells; ii++) {
+							cell = env.notebook.get_cell(ii);
+							if (is_heading(cell)) {
+								env.notebook.select(ii);
+								cell.focus_cell();
+								break;
+							}
+						}
+					}
+				},
+				help : "Un-collapse (expand) the selected heading cell's section",
+				icon : params.toggle_open_icon,
+				help_index: 'c3'
+			},
+			'uncollapse_heading', mod_name
+		);
+
+		action_names.uncollapse_all = Jupyter.keyboard_manager.actions.register({
+				handler : function (env) {
+					env.notebook.get_cells().forEach(function (c, idx, arr) {
+						toggle_heading(c, false);
+					});
+					env.notebook.get_selected_cell().focus_cell();
+				},
+				help : "Un-collapse (expand) all heading cells' sections",
+				icon : params.toggle_open_icon,
+				help_index: 'c4'
+			},
+			'uncollapse_all_headings', mod_name
+		);
+
+		action_names.toggle = Jupyter.keyboard_manager.actions.register ({
+				handler: function () {
+					var heading_cell = find_header_cell(Jupyter.notebook.get_selected_cell(), function (cell) {
+						return cell.element.is(':visible') && !_is_collapsed(cell);
+					});
+					if (is_heading(heading_cell)) {
+						toggle_heading(heading_cell, true);
+						Jupyter.notebook.select(Jupyter.notebook.find_cell_index(heading_cell));
+					}
+				},
+				help   : "Toggle closest heading's collapsed status",
+				icon   : 'fa-angle-double-up',
+			},
+			'toggle_collapse_heading', mod_name
+		);
+
+		action_names.toggle_all = Jupyter.keyboard_manager.actions.register ({
+				handler: function () {
+					var cells = Jupyter.notebook.get_cells();
+					for (var ii = 0; ii < cells.length; ii++) {
+						if (is_heading(cells[ii])) {
+							Jupyter.keyboard_manager.actions.call(action_names[
+								is_collapsed_heading(cells[ii]) ? 'uncollapse_all' : 'collapse_all']);
+							return;
+						}
+					}
+				},
+				help   : 'Collapse/uncollapse all headings based on the status of the first',
+				icon   : 'fa-angle-double-up',
+			},
+			'toggle_collapse_all_headings', mod_name
+		);
+
+		action_names.select = Jupyter.keyboard_manager.actions.register({
+				handler : function (env) {
+					var cell = env.notebook.get_selected_cell();
+					if (is_heading(cell)) {
+						select_heading_section(cell, true);
+					}
+				},
+				help : "Select all cells in the selected heading cell's section",
+				help_index: 'c3'
+			},
+			'select_heading_section', mod_name
+		);
+
+		action_names.insert_above = Jupyter.keyboard_manager.actions.register({
+				handler : function (env) { insert_heading_cell(true); },
+				help : "Insert a heading cell above the selected cell",
+				help_index: 'c4',
+				icon: 'fa-caret-up'
+			},
+			'insert_heading_above', mod_name
+		);
+
+		action_names.insert_below = Jupyter.keyboard_manager.actions.register({
+				handler : function (env) { insert_heading_cell(false); },
+				help : "Insert a heading cell below the selected cell's section",
+				help_index: 'c5',
+				icon: 'fa-caret-down'
+			},
+			'insert_heading_below', mod_name
+		);
+	}
+
+	function imitate_hash_click ($element) {
+		var site = $('#site');
+		var adjust = $element.offset().top - site.offset().top;
+		site.animate({scrollTop: site.scrollTop() + adjust});
+	}
+
+	/**
+	 * Insert a new heading cell either above or below the current section.
+	 * only works in a live notebook.
+	 */
+	function insert_heading_cell (above) {
+		var selected_cell = Jupyter.notebook.get_selected_cell();
+		var ref_cell = find_header_cell(selected_cell) || selected_cell;
+		var level = get_cell_level(ref_cell);
+		level = (level == 7) ? 1 : level; // default to biggest level (1)
+		if (above) {
+			// if above, insert just above selected cell, but keep ref_cell's level
+			ref_cell = selected_cell;
+		}
+		var index = ref_cell.element.index();
+		if (!above) {
+			// below requires special handling, as we really want to put it
+			// below the currently selected heading's *content*
+			var cells = _get_cells();
+			for (index=index + 1; index < cells.length; index++) {
+				if (get_cell_level(cells[index]) <= level) {
+					break;
+				}
+			}
+			// if we make it here, index will be == cells.length, which is ok
+			// as it gets the new cell inserted at the bottom of the notebook
+		}
+		// we don't want our newly-inserted cell to trigger opening of headings
+		var cached_select_reveals = select_reveals;
+		select_reveals = false;
+		var new_cell = Jupyter.notebook.insert_cell_above('markdown', index);
+		var new_text = 'New heading';
+		new_cell.set_text(new_text);
+		new_cell.set_heading_level(level);
+		new_cell.code_mirror.setSelection({line:0, ch: level + 1}, {line:0, ch: level + 1 + new_text.length});
+		Jupyter.notebook.select(index, true);
+		// restore cached setting
+		select_reveals = cached_select_reveals;
+		Jupyter.notebook.focus_cell();
+		Jupyter.notebook.edit_mode();
+	}
+
+	function refresh_all_headings () {
+		var cells = _get_cells();
+		for (var ii=0; ii < cells.length; ii++) {
+			update_heading_cell_status(cells[ii]);
+		}
+		update_collapsed_headings();
+	}
+
+	function set_collapsible_headings_options (options) {
+		// options may be undefined here, but it's still handled ok by $.extend
+		$.extend(true, params, options);
+		// bind/unbind toc-collapse handler
+		events[params.collapse_to_match_toc ? 'on' : 'off']('collapse.Toc uncollapse.Toc', callback_toc_collapse);
+		// add css for indents
+		if (params.indent_px !== 0) {
+			var lines = [];
+			for (var hh = 1; hh <= 6; hh++) {
+				lines.push(
+					'.collapsible_headings_toggle .h' + hh +
+					' { margin-right: ' + ((6 - hh) * params.indent_px) + 'px; }'
+				);
+			}
+			$('<style id="collapsible_headings_indent_css"/>')
+				.html(lines.join('\n'))
+				.appendTo('head');
+		}
+		return params;
+	}
+
+	function add_buttons_and_shortcuts () {
+		// (Maybe) add buttons to the toolbar
+		if (params.add_button) {
+			Jupyter.toolbar.add_buttons_group([action_names.toggle]);
+		}
+		if (params.add_all_cells_button) {
+			Jupyter.toolbar.add_buttons_group([action_names.toggle_all]);
+		}
+		if (params.add_insert_header_buttons) {
+			Jupyter.toolbar.add_buttons_group([
+				action_names.insert_above, action_names.insert_below
+			],'insert_heading_cell_btns');
+		}
+		// add hashes
+		$('#insert_heading_cell_btns .btn').prepend('# ');
+
+		// (Maybe) register keyboard shortcuts
+		if (params.use_shortcuts) {
+			var cmd_shrts = Jupyter.keyboard_manager.command_shortcuts;
+			for (var act in action_names) {
+				if (action_names.hasOwnProperty(act) && params.shortcuts[act]) {
+					cmd_shrts.add_shortcut(params.shortcuts[act], action_names[act]);
+				}
+			}
+		}
+	}
+
+	var callback_toc_collapse = function (evt, data) {
+		// use trigger_event false to avoid re-triggering toc2
+		toggle_heading(data.cell, evt.type.indexOf('un') < 0, false);
+	}
+
+	/**
+	 *  Return a promise which resolves once event handlers have been bound
+	 *
+	 *  @return {Promise}
+	 */
+	function bind_events () {
+
+		// Callbacks bound to the create.Cell event can execute before the cell
+		// data has been loaded from JSON.
+		// So, we rely on rendered.MarkdownCell event to catch headings from
+		// JSON, and the only reason we use create.Cell is to update brackets
+		function callback_create_cell (evt, data) {
+			if (params.show_section_brackets) {
+				update_collapsed_headings();
+			}
+		}
+
+		function callback_delete_cell(evt, data) {
+			update_collapsed_headings();
+		}
+
+		function callback_markdown_rendered (evt, data) {
+			update_heading_cell_status(data.cell);
+			// we update all headings to avoid pasted headings ending up hidden
+			// by other pre-existing collapsed headings - see
+			//     https://github.com/ipython-contrib/jupyter_contrib_nbextensions/issues/1082
+			// for details
+			update_collapsed_headings();
+		}
+
+		return new Promise (function (resolve, reject) {
+			requirejs(['base/js/events'], function on_success (events) {
+
+				// ensure events are detached while notebook loads, in order to
+				// speed up loading (otherwise headings are updated for every
+				// new cell in the notebook), then reattached when load is
+				// complete
+				function events_attach () {
+					refresh_all_headings();
+					events.on('create.Cell', callback_create_cell);
+					events.on('delete.Cell', callback_delete_cell);
+					events.on('rendered.MarkdownCell', callback_markdown_rendered);
+				}
+				function events_detach () {
+					events.off('create.Cell', callback_create_cell);
+					events.off('delete.Cell', callback_delete_cell);
+					events.off('rendered.MarkdownCell', callback_markdown_rendered);
+				}
+
+				if (Jupyter.notebook._fully_loaded) {
+					events_attach();
+				}
+				events.on('notebook_loaded.Notebook', events_attach);
+				events.on('notebook_loading.Notebook', events_detach);
+
+				resolve();
+			}, reject);
+		}).catch(function on_reject (reason) {
+			console.warn(log_prefix, 'error binding events:', reason);
+		});
+	}
+
+	/**
+	 *  Return a menu list item with a link that calls the specified action
+	 *  name.
+	 *
+	 *  @param {String} action_name the name of the action which the menu item
+	 *                  should call
+	 *  @param {String} menu_item_html the html to use as the link's content
+	 *  @return {jQuery}
+	 */
+	function make_action_menu_item (action_name, menu_item_html) {
+		var act = Jupyter.menubar.actions.get(action_name);
+		var menu_item = $('<li/>');
+		$('<a/>')
+			.html(menu_item_html)
+			.attr({'title' : act.help, 'href' : '#'})
+			.on('click', function (evt) {
+				Jupyter.menubar.actions.call(action_name, evt);
+			})
+			.appendTo(menu_item);
+		return menu_item;
+	}
+
+	/**
+	 * Add any new items to the notebook menu
+	 */
+	function insert_menu_items () {
+		$('#insert_menu')
+			.append('<li class="divider"/>')
+			.append(make_action_menu_item(action_names.insert_above, 'Insert Heading Above'))
+			.append(make_action_menu_item(action_names.insert_below, 'Insert Heading Below'));
+	}
+
+	/**
+	 * Initialize the extension.
+	 */
+	function load_jupyter_extension () {
+		// Load css first
+		$('<link/>')
+			.attr({
+				id: 'collapsible_headings_css',
+				rel: 'stylesheet',
+				type: 'text/css',
+				href: requirejs.toUrl('./main.css')
+			})
+			.appendTo('head');
+
+		// ensure Jupyter module is defined before proceeding further
+		new Promise(function (resolve, reject) {
+			requirejs(['base/js/namespace'], function (Jupyter_mod) {
+				live_notebook = true;
+				Jupyter = Jupyter_mod;
+				resolve(Jupyter);
+			}, reject);
+		})
+
+		// load config & update params
+		.then(function (Jupyter) {
+			return Jupyter.notebook.config.loaded.catch(function on_err (reason) {
+				console.warn(log_prefix, 'error loading config:', reason);
+			}).then(function () {
+				// may be undefined, but that's ok.
+				return Jupyter.notebook.config.data.collapsible_headings;
+			});
+		})
+		// set values using resolution val of previous .then
+		.then(set_collapsible_headings_options)
+
+		// apply all promisory things in arbitrary order
+		.then(patch_actions)
+		.then(patch_Notebook)
+		.then(patch_TextCell)
+		.then(patch_Tooltip)
+		.then(bind_events)
+		// finally add user-interaction stuff
+		.then(function () {
+			register_new_actions();
+			insert_menu_items();
+			add_buttons_and_shortcuts();
+		})
+		.catch(function on_reject (reason) {
+			console.error(log_prefix, 'error:', reason);
+		});
+	}
+
+	/**
+	 * Export things
+	 */
+	return {
+		get_cell_level : get_cell_level,
+		reveal_cell_by_index : reveal_cell_by_index,
+		update_collapsed_headings : update_collapsed_headings,
+		set_collapsible_headings_options : set_collapsible_headings_options,
+		refresh_all_headings: refresh_all_headings,
+		load_jupyter_extension : load_jupyter_extension,
+		load_ipython_extension : load_jupyter_extension
+	};
+});
+
+    </script>
+<script type="text/javascript">
+    
+$(document).ready(function () {
+    require(['nbextensions/collapsible_headings/main'], function (ch) {
+        ch.set_collapsible_headings_options({});
+        ch.refresh_all_headings();
+    });
+});
+
+    </script>
+</head>
 <body>
   <div tabindex="-1" id="notebook" class="border-box-sizing">
     <div class="container" id="notebook-container">
 
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="PSD-analysis-of-different-cases-of-(simulated)-reaction-systems">PSD analysis of different cases of (simulated) reaction systems<a class="anchor-link" href="#PSD-analysis-of-different-cases-of-(simulated)-reaction-systems">&#182;</a></h1><h2 id="The-basics,-linear-reactions">The basics, linear reactions<a class="anchor-link" href="#The-basics,-linear-reactions">&#182;</a></h2><p>Let's start with the obligatory import of modules we need.</p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Math</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="k">import</span> <span class="n">odeint</span>
 
+<span class="c1"># Plotting stuff</span>
 <span class="kn">import</span> <span class="nn">plotly</span>
 <span class="kn">import</span> <span class="nn">plotly.graph_objs</span> <span class="k">as</span> <span class="nn">go</span>
 <span class="kn">import</span> <span class="nn">plotly.io</span> <span class="k">as</span> <span class="nn">pio</span>
 <span class="kn">from</span> <span class="nn">plotly.subplots</span> <span class="k">import</span> <span class="n">make_subplots</span>
-<span class="kn">from</span> <span class="nn">plotly.offline</span> <span class="k">import</span> <span class="n">iplot</span><span class="p">,</span> <span class="n">init_notebook_mode</span>
-<span class="n">pio</span><span class="o">.</span><span class="n">renderers</span><span class="o">.</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;iframe&#39;</span>
 
-<span class="kn">import</span> <span class="nn">scipy</span>
-<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="k">import</span> <span class="n">odeint</span>
+<span class="n">pio</span><span class="o">.</span><span class="n">renderers</span><span class="o">.</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;iframe&#39;</span>
 </pre></div>
 
     </div>
@@ -13101,7 +14356,8 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We'll start with defining the <code>BasicReactionModel</code> class and <code>constr_stoichio</code> function who will construct our system of differential equations (<code>BasicReactionModel</code>) and construct a stoichiometry matrix (<code>constr_stoichio</code>).</p>
+<p>We'll also need the previously defined <code>BasicReactionModel</code> class and <code>constr_stoichio</code> function who will construct our system of differential equations (<code>BasicReactionModel</code>) and construct a stoichiometry matrix (<code>constr_stoichio</code>). These ones have been stored in a module <code>ModelStuff</code>.</p>
+<p>I've also defined a template (<code>PlotStuff</code>) for how I want to the data to be plotted, resulting in a macro named <code>plotty</code> for plotting the data.</p>
 
 </div>
 </div>
@@ -13111,128 +14367,8 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">BasicReactionModel</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Constructs a reaction model to be used in microkinetic modelling.</span>
-<span class="sd">    </span>
-<span class="sd">    To define a reaction system, a stoichiometry matrix must be given during the</span>
-<span class="sd">    initialisation of the class instance OR a list of reaction expressions must </span>
-<span class="sd">    be given (which is used to define a stoichiometry matrix).</span>
-<span class="sd">    </span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    const_react : numpy array</span>
-<span class="sd">      The constant terms (e.g reaction rate constant) of the forward (row 0) and </span>
-<span class="sd">      backward reaction (row 1) of the net reaction (col).</span>
-<span class="sd">    stoichi : numpy array</span>
-<span class="sd">      The stoichiometry matrix of the reaction system for the reactions </span>
-<span class="sd">      (row) and species (col).</span>
-<span class="sd">    exp : numpy array</span>
-<span class="sd">      The exponents of the reaction terms (col) at different reactions (row)</span>
-<span class="sd">    const_term : numpy array</span>
-<span class="sd">      1D Boolean array, defines which reaction terms that are set as </span>
-<span class="sd">      constants (True) and variables (False). Defaults to no constants. </span>
-<span class="sd">    forwM : numpy array</span>
-<span class="sd">      2D Boolean array, signifying variables used for the forward reaction.</span>
-<span class="sd">    backM : numpy array</span>
-<span class="sd">      2D Boolean array, signifying variables used for the backward reaction.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">const_react</span> <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span>
-                 <span class="n">stoichi</span> <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span>
-                 <span class="n">const_term</span><span class="o">=</span><span class="p">{},</span>
-                 <span class="p">):</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">stoichio</span><span class="p">(</span><span class="n">stoichi</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="n">const_term</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__defaults__</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="n">const_term</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stoichi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        
-        <span class="k">if</span> <span class="n">const_react</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stoichi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">const_react</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">stoichi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-                <span class="n">const_react</span> <span class="o">=</span> <span class="n">const_react</span><span class="o">.</span><span class="n">T</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Dimension mismatch between const_react </span><span class="se">\</span>
-<span class="s1">                                  and stoichi&#39;</span><span class="p">)</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">const</span> <span class="o">=</span> <span class="n">const_term</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">react_const</span><span class="p">(</span><span class="n">const_react</span><span class="p">)</span>
-    
-    <span class="k">def</span> <span class="nf">stoichio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stoichi</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stoichi</span> <span class="o">=</span> <span class="n">stoichi</span><span class="o">.</span><span class="n">T</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">exp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stoichi</span><span class="p">[:])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">forwM</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stoichi</span> <span class="o">&lt;</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">backM</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stoichi</span> <span class="o">&gt;</span> <span class="mi">0</span>
-    
-    <span class="k">def</span> <span class="nf">react_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">const_react</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">forwC</span> <span class="o">=</span> <span class="n">const_react</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">backC</span> <span class="o">=</span> <span class="n">const_react</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
-
-    <span class="k">def</span> <span class="nf">reaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Solves dx/dt given the, for the class instance, predefined stoichiometry</span>
-<span class="sd">        matrix and reaction rate constants.</span>
-<span class="sd">        </span>
-<span class="sd">        It is intended to be used together with an ODE solver such as SciPy&#39;s</span>
-<span class="sd">        solve_ivp.        </span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        
-        <span class="n">terms</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stoichi</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp</span>
-        
-        <span class="n">forw_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forwC</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">terms</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">forwM</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">back_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backC</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">terms</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backM</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="n">dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stoichi</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">forw_r</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">back_r</span><span class="p">))</span>
-        <span class="n">dx</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">const</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-
-        <span class="k">return</span> <span class="n">dx</span>
-
-<span class="k">def</span> <span class="nf">constr_stoichio</span><span class="p">(</span><span class="n">lst_var</span><span class="p">,</span> <span class="n">lst_react</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Constructs a stoichiometry matrix given a list of rate expressions</span>
-<span class="sd">    (lst_react) and a list of variables (lst_var).</span>
-<span class="sd">    </span>
-<span class="sd">    The rate expressions are expected to be given as strings expressed as:</span>
-<span class="sd">        &quot;x0 + x1 + ... + xn -&gt; y0 + y1 + ... + yn&quot;</span>
-<span class="sd">    An example would be &quot;H2 (g) + 2* -&gt; 2H*&quot;</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">stoichio_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">lst_var</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst_react</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
-    
-    <span class="n">react_split</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">reaction</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lst_react</span><span class="p">):</span>
-        <span class="n">reaction</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\+| (-&gt;)&quot;</span><span class="p">,</span> <span class="n">reaction</span><span class="p">)))</span>
-        <span class="n">reaction</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">reaction</span><span class="p">]</span>
-        <span class="n">react_split</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reaction</span><span class="p">)</span> 
-    
-    <span class="k">for</span> <span class="n">react_nr</span><span class="p">,</span> <span class="n">reaction</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">react_split</span><span class="p">):</span>
-        <span class="n">left_side</span> <span class="o">=</span> <span class="kc">True</span>
-    
-        <span class="k">for</span> <span class="n">react_var</span> <span class="ow">in</span> <span class="n">reaction</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">react_var</span> <span class="o">==</span> <span class="s2">&quot;-&gt;&quot;</span><span class="p">:</span>
-                <span class="n">left_side</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">str_nu</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\d+&#39;</span><span class="p">,</span> <span class="n">react_var</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
-                    <span class="n">nu</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">str_nu</span><span class="p">)</span>
-                    <span class="n">react_var</span> <span class="o">=</span> <span class="n">react_var</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">str_nu</span><span class="p">):]</span>
-                <span class="k">except</span><span class="p">:</span>
-                    <span class="n">nu</span> <span class="o">=</span> <span class="mi">1</span>
-    
-                <span class="k">if</span> <span class="n">left_side</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-                    <span class="n">nu</span> <span class="o">=</span> <span class="n">nu</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span>
-    
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">stoichio_idx</span> <span class="o">=</span> <span class="n">lst_var</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">react_var</span><span class="p">)</span>
-                    <span class="n">stoichio_m</span><span class="p">[</span><span class="n">stoichio_idx</span><span class="p">,</span> <span class="n">react_nr</span><span class="p">]</span> <span class="o">=</span> <span class="n">nu</span>
-                <span class="k">except</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="n">react_var</span> 
-                          <span class="o">+</span> <span class="s2">&quot; doesn&#39;t exist in the list of variables.</span><span class="se">\n</span><span class="s2">&quot;</span> \
-                          <span class="o">+</span> <span class="s2">&quot;Reaction &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">react_nr</span><span class="p">)</span> \
-                          <span class="o">+</span> <span class="s2">&quot; is potentially incorrect.</span><span class="se">\n</span><span class="s2">&quot;</span> \
-                          <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">lst_react</span><span class="p">[</span><span class="n">react_nr</span><span class="p">]))</span>
-    
-    <span class="k">return</span> <span class="n">stoichio_m</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">ModelStuff</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">PlotStuff</span> <span class="k">import</span> <span class="n">plotty</span>
 </pre></div>
 
     </div>
@@ -13243,102 +14379,23 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To reduce the amount of unnecessary code, let's define a template on how we want to plot the data. Perhaps excessive but I want to have the data in a certain way instead of the default.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_template</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-    <span class="n">layout</span><span class="o">=</span><span class="n">go</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span>
-        <span class="n">title_font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">family</span><span class="o">=</span><span class="s2">&quot;Rockwell&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">),</span>
-        <span class="n">xaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
-            <span class="n">showline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">showgrid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">showticklabels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">linecolor</span><span class="o">=</span><span class="s1">&#39;rgb(204, 204, 204)&#39;</span><span class="p">,</span>
-            <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="n">ticks</span><span class="o">=</span><span class="s1">&#39;outside&#39;</span><span class="p">,</span>
-            <span class="n">tickcolor</span><span class="o">=</span><span class="s1">&#39;rgb(204, 204, 204)&#39;</span><span class="p">,</span>
-            <span class="n">tickfont</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
-                <span class="n">family</span><span class="o">=</span><span class="s1">&#39;Arial&#39;</span><span class="p">,</span>
-                <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
-                <span class="n">color</span><span class="o">=</span><span class="s1">&#39;rgb(82, 82, 82)&#39;</span><span class="p">,</span>
-            <span class="p">),</span>
-            <span class="n">rangemode</span><span class="o">=</span><span class="s1">&#39;tozero&#39;</span><span class="p">,</span>
-        <span class="p">),</span>
-        <span class="n">yaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
-            <span class="n">showline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">showgrid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">showticklabels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">linecolor</span><span class="o">=</span><span class="s1">&#39;rgb(204, 204, 204)&#39;</span><span class="p">,</span>
-            <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="n">ticks</span><span class="o">=</span><span class="s1">&#39;outside&#39;</span><span class="p">,</span>
-            <span class="n">tickcolor</span><span class="o">=</span><span class="s1">&#39;rgb(204, 204, 204)&#39;</span><span class="p">,</span>
-            <span class="n">tickfont</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
-                <span class="n">family</span><span class="o">=</span><span class="s1">&#39;Arial&#39;</span><span class="p">,</span>
-                <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
-                <span class="n">color</span><span class="o">=</span><span class="s1">&#39;rgb(82, 82, 82)&#39;</span><span class="p">,</span>
-            <span class="p">),</span>
-            <span class="n">rangemode</span><span class="o">=</span><span class="s1">&#39;tozero&#39;</span><span class="p">,</span>
-        <span class="p">),</span>
-        <span class="n">showlegend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">plot_bgcolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">plotty</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
-    <span class="n">fig</span> <span class="o">=</span> <span class="n">make_subplots</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">add_scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
-                        <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
-                        <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                        <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                        <span class="p">)</span>
-    
-    <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">template</span><span class="o">=</span><span class="n">plot_template</span><span class="p">)</span>    
-    
-    <span class="n">fig</span><span class="o">.</span><span class="n">add_scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
-                    <span class="n">y</span><span class="o">=</span><span class="n">r</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;TOF&#39;</span><span class="p">,</span>
-                    <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                    <span class="n">col</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                    <span class="p">)</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;Time&quot;</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;Time&quot;</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s1">&#39;Coverage&#39;</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">&quot;TOF&quot;</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    
-    <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-    
-    <span class="k">return</span> <span class="n">fig</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>To begin, let's look at a simple reaction.</p>
+<h3 id="Only-one-desorption-step">Only one desorption step<a class="anchor-link" href="#Only-one-desorption-step">&#182;</a></h3><p>To begin, let's look at the following reaction system:</p>
 $$
 \begin{align}
-    A_2 &amp;\rightarrow 2A*
+    A_2 &amp;\rightarrow 2A^*\\
+    B + * &amp;\rightarrow B*\\
+    A^* + B^* &amp;\rightarrow AB^* + *\\
+    AB^* &amp;\rightarrow AB + *
 \end{align}
-$$
+$$<p>A simple linear reaction scheme, with three adsorption/desorption steps and one surface reaction between two different adsorbates. We'll define the differential equation system by first defining a stoichiometry matrix for the reaction system by the use of <code>constr_stoichio</code>. Given this stoichiometry matrix, we can later on define the ODE system by the use of <code>BasicReactionModel</code>.</p>
+<p>For this first example, we'll set all reaction constants to be equal (1) except the re-adsorption of AB which we will prohibit by setting its reaction constant (<code>k[1, -1]</code>) to 0. Furthermore, we'll set the partial pressures as constant (<code>constant_term = True</code> for variables corresponding to pressures) and the initial condition as a clean surface and that we only have one kind of adsorption site.</p>
+
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">reactions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;A2 + 2* -&gt; 2A*&quot;</span><span class="p">,</span>
@@ -13365,98 +14422,54 @@ $$
 
 <span class="n">stoichi</span> <span class="o">=</span> <span class="n">constr_stoichio</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">reactions</span><span class="p">)</span>
 
-<span class="n">torkel</span> <span class="o">=</span> <span class="n">BasicReactionModel</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
-                            <span class="n">stoichi</span><span class="o">=</span><span class="n">stoichi</span><span class="p">,</span>
-                            <span class="n">const_term</span><span class="o">=</span><span class="n">constant_term</span><span class="p">,</span>
-                            <span class="p">)</span>
+<span class="n">test_model</span> <span class="o">=</span> <span class="n">BasicReactionModel</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                                <span class="n">stoichi</span><span class="o">=</span><span class="n">stoichi</span><span class="p">,</span>
+                                <span class="n">const_term</span><span class="o">=</span><span class="n">constant_term</span><span class="p">,</span>
+                                <span class="p">)</span>
+</pre></div>
 
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>So, we are now ready to solve the differential equation system. For this, we'll use SciPy's solve_ivp function (using the default Runge-Kutta 45 method).</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Time span</span>
 <span class="n">t0</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">tf</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="c1">#</span>
+
+<span class="c1"># Error tolerance</span>
 <span class="n">res</span> <span class="o">=</span> <span class="mf">1.0e-12</span>
-<span class="n">AbsTol</span> <span class="o">=</span> <span class="p">[</span><span class="n">res</span><span class="p">]</span> <span class="o">*</span> <span class="n">torkel</span><span class="o">.</span><span class="n">stoichi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">AbsTol</span> <span class="o">=</span> <span class="p">[</span><span class="n">res</span><span class="p">]</span> <span class="o">*</span> <span class="n">test_model</span><span class="o">.</span><span class="n">stoichi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <span class="n">RelTol</span> <span class="o">=</span> <span class="n">res</span>
 
-<span class="n">ans</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">solve_ivp</span><span class="p">(</span><span class="n">torkel</span><span class="o">.</span><span class="n">reaction</span><span class="p">,</span> 
-                                 <span class="p">[</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">],</span> 
-                                 <span class="n">x0</span><span class="p">,</span>
-                                 <span class="n">rtol</span><span class="o">=</span><span class="n">RelTol</span><span class="p">,</span> 
-                                 <span class="n">atol</span><span class="o">=</span><span class="n">AbsTol</span><span class="p">,</span>
-                                 <span class="p">)</span>
+<span class="n">ans</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">solve_ivp</span><span class="p">(</span><span class="n">test_model</span><span class="o">.</span><span class="n">reaction</span><span class="p">,</span> 
+                                <span class="p">[</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">],</span> 
+                                <span class="n">x0</span><span class="p">,</span>
+                                <span class="n">rtol</span><span class="o">=</span><span class="n">RelTol</span><span class="p">,</span> 
+                                <span class="n">atol</span><span class="o">=</span><span class="n">AbsTol</span><span class="p">,</span>
+                                <span class="p">)</span>
 
-<span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">torkel</span><span class="o">.</span><span class="n">reaction</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">ans</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+<span class="c1"># Net reaction rate for each step</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">test_model</span><span class="o">.</span><span class="n">reaction</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">ans</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
 
+<span class="c1"># Plot the data</span>
 <span class="n">fig</span> <span class="o">=</span> <span class="n">plotty</span><span class="p">(</span><span class="n">ans</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">ans</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">variables</span><span class="p">[:(</span><span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0_press</span><span class="p">))],</span> <span class="n">r</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-</pre></div>
 
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-<div class="output_html rendered_html output_subarea ">
-<div>                            <div id="0e85d6ed-aa17-4001-9d29-c0aa69d76b5e" class="plotly-graph-div" style="height:525px; width:100%;"></div>            <script type="text/javascript">                require(["plotly"], function(Plotly) {                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("0e85d6ed-aa17-4001-9d29-c0aa69d76b5e")) {                    Plotly.newPlot(                        "0e85d6ed-aa17-4001-9d29-c0aa69d76b5e",                        [{"name": "*", "type": "scatter", "x": [0.0, 0.001121135035472277, 0.005093373003210167, 0.009075287879972815, 0.013085709423220484, 0.017124588321242022, 0.021192003295500143, 0.025288035595435084, 0.029412769517554647, 0.03356629248709851, 0.037748695356332615, 0.041960071879406174, 0.046200519250114605, 0.05047013789936044, 0.05476903137129939, 0.059097306480164084, 0.06345507321973615, 0.06784244498144053, 0.07225953840280114, 0.07670647336647525, 0.0811833730168617, 0.08569036391910631, 0.0902275758908549, 0.09479514222513169, 0.09939319949844011, 0.104021887794556, 0.1086813505585563, 0.11337173465904217, 0.11809319047875036, 0.1228458720961385, 0.12762993686542637, 0.132445545775017, 0.13729286348444006, 0.14217205832194368, 0.1470833022014456, 0.15202677080315397, 0.15700264351864163, 0.16201110371020686, 0.1670523382558894, 0.17212653818883938, 0.17723389828841907, 0.18237461757613962, 0.1875488987229242, 0.19275694874503177, 0.19799897878422063, 0.20327520398376087, 0.20858584397848803, 0.21393112238123801, 0.21931126737162243, 0.22472651156783136, 0.23017709202006542, 0.23566325039709765, 0.24118523289413013, 0.24674329043947468, 0.25233767878124824, 0.25796865848610717, 0.26363649510904186, 0.2693414590548328, 0.2750838259559283, 0.2808638765947278, 0.28668189709012654, 0.2925381787971527, 0.2984330186432481, 0.3043667189436572, 0.31033958795114275, 0.31635193940304573, 0.32240409317623364, 0.32849637482621896, 0.33462911606073176, 0.34080265502285084, 0.3470173360503508, 0.3532735098832711, 0.35957153383557194, 0.3659117720789358, 0.37229459546072435, 0.3787203818831657, 0.3851895163705269, 0.3917023911739676, 0.3982594060777625, 0.40486096831486396, 0.4115074930093939, 0.41819940299401087, 0.4249371292758042, 0.43172111118751944, 0.438551796338418, 0.44542964105248317, 0.452355110389295, 0.45932867845763753, 0.4663508285319571, 0.4734220532472024, 0.4805428549479194, 0.48771374568997394, 0.4949352477676443, 0.5022078935989016, 0.5095322262104961, 0.5169087994013171, 0.5243381779462121, 0.531820938033258, 0.5393576673998429, 0.5469489655411571, 0.5545954440777171, 0.5622977272074909, 0.5700564517318241, 0.5778722675802677, 0.5857458379130999, 0.5936778397180665, 0.6016689640744456, 0.6097199163055267, 0.6178314166652016, 0.6260042005134107, 0.634239018729614, 0.642536638084546, 0.6508978418739978, 0.6593234302993748, 0.6678142204300485, 0.6763710473060502, 0.6849947641079126, 0.6936862426742377, 0.7024463741171422, 0.7112760690774352, 0.7201762586993197, 0.7291478946949884, 0.7381919504447205, 0.7473094213070144, 0.7565013251167617, 0.7657687030573498, 0.7751126204571981, 0.7845341727319787, 0.7940344754567392, 0.8036146699674589, 0.8132759243908643, 0.8230194346286163, 0.8328464254882276, 0.8427581507662703, 0.8527558947629239, 0.8628409728963032, 0.8730147330565072, 0.8832785560760192, 0.893633857372505, 0.90408208754203, 0.9146247338100205, 0.9252633209850635, 0.9359994127056858, 0.9468346131338875, 0.9577705677091615, 0.9688089646272973, 0.9799515368126887, 0.991200062658648, 1.0025563683857681, 1.01402232873809, 1.0255998695300321, 1.0372909689492442, 1.0490976597778348, 1.0610220308645557, 1.073066229448441, 1.0852324631016896, 1.0975230020498419, 1.109940181407601, 1.1224864038602798, 1.1351641414938205, 1.1479759391504523, 1.1609244168216977, 1.174012272571257, 1.1872422855734308, 1.2006173190061544, 1.2141403241004516, 1.2278143422355676, 1.2416425100955837, 1.2556280628430327, 1.2697743378301438, 1.2840847785716705, 1.2985629399332288, 1.313212492612692, 1.32803722673134, 1.3430410585732195, 1.3582280347623015, 1.3736023382962457, 1.3891682941605794, 1.4049303751875684, 1.4208932086098092, 1.437061583559942, 1.4534404568585582, 1.4700349612029477, 1.4868504119213393, 1.5038923168545044, 1.5211663820385322, 1.5386785226976814, 1.5564348715572267, 1.5744417888189972, 1.5927058706715909, 1.611233960381903, 1.6300331594360802, 1.6491108368428988, 1.6684746404059412, 1.6881325092882593, 1.7080926827899034, 1.7283637147035353, 1.7489544807724575, 1.769874192876707, 1.7911324071168409, 1.8127390329316833, 1.8347043428149759, 1.8570389769516265, 1.8797539492226905, 1.90286064958486, 1.9263708402516622, 1.9502966513247875, 1.974650568222991, 1.9994454151359677, 2.024694328589138, 2.0504107203337787, 2.0766082333764353, 2.103300679209953, 2.1305019623945016, 2.1582259872017793, 2.1864865480667257, 2.215297194496441, 2.2446710759907877, 2.2746207703652743, 2.3051580885365826, 2.3362938690345305, 2.3680377614151373, 2.4003980165937215, 2.4333812880733072, 2.466992470133586, 2.501234578755864, 2.536108696130112, 2.5716140017475833, 2.607747878504973, 2.644506121926528, 2.6818832196209814, 2.719872703471301, 2.7584675444550495, 2.7976605653233815, 2.837444838177793, 2.8778140508701884, 2.9187628204333915, 2.960286938219493, 3.002383551268897, 3.045051274690907, 3.0882902500986935, 3.1321021531360964, 3.176490164821093, 3.221458918726233, 3.267014428996826, 3.3131640110627463, 3.359916199568343, 3.4072806694423137, 3.455268159698282, 3.5038904045774935, 3.553160077032237, 3.6030907356062163, 3.6536967820684905, 3.7049934282014343, 3.7569966689375565, 3.809723263380634, 3.863190723711135, 3.9174173083468213, 3.9724220218002206, 4.028224619457117, 4.084845618897711, 4.142306309770192, 4.200628778177143, 4.2598359243047295, 4.319951491239162, 4.381000093446618, 4.443007252764169, 4.5059994350436146, 4.57000409378273, 4.63504971321656, 4.701165863783251, 4.768383252689632, 4.8367337896358915, 4.906250649893733, 4.976968349596809, 5.048922819886661, 5.122151501128075, 5.196693426527239, 5.272589335706917, 5.349881781472891, 5.42861525632693, 5.508836321331913, 5.590593759399132, 5.673938730787579, 5.758924956879597, 5.845608908319185, 5.934050022846345, 6.02431093104497, 6.116457721010854, 6.2105602115714555, 6.306692270010778, 6.404932153288765, 6.505362879650947, 6.6080726510585865, 6.713155296118467, 6.820710809653253, 6.930845881295425, 7.043674558019474, 7.159318917290081, 7.277909862477154, 7.399587983568036, 7.5245045398239965, 7.652822572619538, 7.784718113548779, 7.9203816158113955, 8.060019547191564, 8.203856159732977, 8.35213560560117, 8.505124268241982, 8.66311350019058, 8.826422771195132, 8.995403314637564, 9.17044238928943, 9.351968228840263, 9.54045592775647, 9.736434324322415, 9.940494264559252, 10.0], "xaxis": "x", "y": [1.0, 0.9966466270058774, 0.9849252390132174, 0.9734207726500452, 0.9620763007830756, 0.9508911379185492, 0.9398642022203586, 0.9289943836640545, 0.9182805443523477, 0.9077215200463847, 0.8973161211287768, 0.8870631355829964, 0.876961329240597, 0.8670094478444319, 0.8572062188124099, 0.8475503522886272, 0.8380405427199957, 0.8286754697013426, 0.8194537995927259, 0.8103741867382764, 0.8014352746005087, 0.7926356965759693, 0.7839740774227414, 0.7754490338761524, 0.7670591760241754, 0.7588031078578473, 0.7506794284709861, 0.742686732832255, 0.7348236124851169, 0.7270886560828064, 0.7194804508703282, 0.7119975828406784, 0.7046386374160556, 0.6974022001584, 0.6902868575597836, 0.6832911974136276, 0.6764138095113051, 0.6696532858766575, 0.6630082219492125, 0.6564772162598786, 0.6500588714974107, 0.6437517943744969, 0.6375545968418228, 0.6314658956834942, 0.6254843132373434, 0.6196084779457893, 0.6138370242025611, 0.6081685933042164, 0.6026018331704499, 0.5971353988466274, 0.591767952844708, 0.586498165277572, 0.5813247142560571, 0.5762462859818974, 0.5712615749539471, 0.5663692842406307, 0.5615681255888563, 0.5568568197864364, 0.5522340965774107, 0.5476986949582647, 0.543249363246181, 0.5388848593621007, 0.5346039507713233, 0.5304054148085147, 0.5262880384653623, 0.5222506188851284, 0.5182919630770578, 0.5144108883838927, 0.510606222314261, 0.5068768025203206, 0.5032214770902946, 0.4996391045490905, 0.4961285538830778, 0.49268870450539676, 0.48931844647373984, 0.4860166803931583, 0.48278231749046246, 0.4796142796614697, 0.4765114994185554, 0.4734729200253886, 0.47049749537855995, 0.46758419017693054, 0.4647319797931753, 0.4619398502929904, 0.4592067985299949, 0.4565318320371078, 0.4539139690894223, 0.4513522386490886, 0.44884568038633343, 0.446393344667759, 0.44399429249231565, 0.441647595546852, 0.4393523360843603, 0.43710760701408463, 0.4349125117954139, 0.432766164437326, 0.4306676894822586, 0.42861622192471355, 0.4266109072177126, 0.4246509012546419, 0.4227353703092407, 0.4208634909597553, 0.4190344501194653, 0.4172474449434587, 0.4155016828373919, 0.4137963813534401, 0.41213076816601146, 0.41050408106727804, 0.4089155678532122, 0.4073644863180696, 0.4058501041994836, 0.4043716991329713, 0.4029285585622078, 0.4015199796993717, 0.4001452695515803, 0.39880374475796926, 0.39749473158733495, 0.39621756587771256, 0.3949715929646468, 0.3937561676628029, 0.39257065414767794, 0.39141442596575066, 0.39028686590658096, 0.38918736598334197, 0.3881153273862968, 0.38707016039387854, 0.38605128429904567, 0.3850581268069238, 0.3840901251330742, 0.38314672537709843, 0.38222738242922993, 0.3813315598885939, 0.3804587299743302, 0.3796083735324883, 0.37877997991458573, 0.3779730469401795, 0.3771870808001913, 0.37642159603361464, 0.3756761154152164, 0.37495016992653796, 0.37424329866545764, 0.3735550487945724, 0.3728849754710829, 0.372232641753315, 0.3715976185688822, 0.3709794846383955, 0.37037782637718836, 0.36979223786907994, 0.36922232075453537, 0.36866768420954504, 0.36812794483275785, 0.36760272659943116, 0.3670916607746177, 0.36659438586372917, 0.3661105475283938, 0.36563979852287404, 0.365181798618552, 0.36473621453577587, 0.3643027198634838, 0.363880995012209, 0.3634707271175096, 0.3630716099815104, 0.3626833440000416, 0.3623056360905776, 0.3619381996280284, 0.3615807543527659, 0.3612330263358194, 0.3608947478665198, 0.3605656573987663, 0.360245499485771, 0.3599340247119452, 0.3596309896031391, 0.35933615655911216, 0.3590492938065247, 0.3587701752933714, 0.35849858064030293, 0.35823429506025634, 0.35797710929142407, 0.3577268195301314, 0.357483227357045, 0.35724613965505475, 0.35701536855817145, 0.356790731368997, 0.35657205050193425, 0.3563591533898392, 0.3561518724501902, 0.35595004498792765, 0.35575351313825543, 0.3555621237942118, 0.35537572855436944, 0.3551941836465226, 0.35501734985705174, 0.3548450924814947, 0.35467728125827347, 0.3545137902953084, 0.35435449803124697, 0.3541992871514689, 0.3540480445604426, 0.3539006613007931, 0.35375703251763324, 0.353617057410041, 0.3534806391744583, 0.35334768497415925, 0.3532181058899839, 0.35309181688213664, 0.35296873677098345, 0.3528487882007529, 0.3527318976232393, 0.3526179952727507, 0.3525070151552146, 0.35239889504487326, 0.3522935764643404, 0.35219100468980935, 0.3520911287429625, 0.3519939013809464, 0.35189927906757834, 0.3518072219477816, 0.3517176937937256, 0.3516306619064035, 0.35154609698982353, 0.35146397295711185, 0.3513842666776881, 0.3513069576302568, 0.3512320274744391, 0.35115945950903826, 0.35108923804542047, 0.3510213476954704, 0.3509557725805207, 0.3508924955363305, 0.3508314973071998, 0.3507727558271751, 0.3507162456033693, 0.3506619372566333, 0.35060979724421365, 0.3505597877827323, 0.3505118669529455, 0.3504659889693623, 0.35042210458541334, 0.35038016158503765, 0.3503401053297866, 0.3503018793172349, 0.3502654257283245, 0.3502306859378535, 0.3501976009731882, 0.3501661119172606, 0.35013616025029415, 0.350107688133273, 0.35008063863648253, 0.3500549559208597, 0.3500305853765394, 0.3500074737232387, 0.34998556908333084, 0.3499648210289863, 0.3499451806091021, 0.3499266003610668, 0.34990903430986575, 0.3498924379573202, 0.34987676826481967, 0.3498619836303705, 0.3498480438619348, 0.3498349101477523, 0.34982254502635357, 0.3498109123531915, 0.34979997726929113, 0.34978970616821853, 0.3497800666641295, 0.3497710275596173, 0.34976255881470225, 0.3497546315160485, 0.3497472178475202, 0.3497402910605058, 0.34973382544613146, 0.34972779630710393, 0.3497221799311276, 0.3497169535644088, 0.3497120953864074, 0.34970758448424566, 0.3497034008289308, 0.3496995252507123, 0.3496959394159498, 0.3496926258038694, 0.34968956768412746, 0.34968674909421205, 0.34968415481764226, 0.3496817703619992, 0.3496795819376456, 0.34967757643634817, 0.34967574141043845, 0.34967406505179144, 0.34967253617135113, 0.3496711441785076, 0.34966987906081687, 0.34966873136392346, 0.3496676921714929, 0.3496667530855582, 0.34966590620658555, 0.34966514411434513, 0.34966445984838, 0.34966384688917274, 0.34966329913925426, 0.3496628109047405, 0.3496623768770595, 0.3496619921149801, 0.34966165202711175, 0.34966135235455986, 0.349661089154074, 0.34966085878165837, 0.3496606578764306, 0.3496604833450852, 0.3496603323467219, 0.349660202278172, 0.3496600907598133, 0.3496599956218681, 0.34965991489122167, 0.34965984677870987, 0.3496597896669452, 0.3496597420986145, 0.34965973014619023], "yaxis": "y"}, {"name": "A*", "type": "scatter", "x": [0.0, 0.001121135035472277, 0.005093373003210167, 0.009075287879972815, 0.013085709423220484, 0.017124588321242022, 0.021192003295500143, 0.025288035595435084, 0.029412769517554647, 0.03356629248709851, 0.037748695356332615, 0.041960071879406174, 0.046200519250114605, 0.05047013789936044, 0.05476903137129939, 0.059097306480164084, 0.06345507321973615, 0.06784244498144053, 0.07225953840280114, 0.07670647336647525, 0.0811833730168617, 0.08569036391910631, 0.0902275758908549, 0.09479514222513169, 0.09939319949844011, 0.104021887794556, 0.1086813505585563, 0.11337173465904217, 0.11809319047875036, 0.1228458720961385, 0.12762993686542637, 0.132445545775017, 0.13729286348444006, 0.14217205832194368, 0.1470833022014456, 0.15202677080315397, 0.15700264351864163, 0.16201110371020686, 0.1670523382558894, 0.17212653818883938, 0.17723389828841907, 0.18237461757613962, 0.1875488987229242, 0.19275694874503177, 0.19799897878422063, 0.20327520398376087, 0.20858584397848803, 0.21393112238123801, 0.21931126737162243, 0.22472651156783136, 0.23017709202006542, 0.23566325039709765, 0.24118523289413013, 0.24674329043947468, 0.25233767878124824, 0.25796865848610717, 0.26363649510904186, 0.2693414590548328, 0.2750838259559283, 0.2808638765947278, 0.28668189709012654, 0.2925381787971527, 0.2984330186432481, 0.3043667189436572, 0.31033958795114275, 0.31635193940304573, 0.32240409317623364, 0.32849637482621896, 0.33462911606073176, 0.34080265502285084, 0.3470173360503508, 0.3532735098832711, 0.35957153383557194, 0.3659117720789358, 0.37229459546072435, 0.3787203818831657, 0.3851895163705269, 0.3917023911739676, 0.3982594060777625, 0.40486096831486396, 0.4115074930093939, 0.41819940299401087, 0.4249371292758042, 0.43172111118751944, 0.438551796338418, 0.44542964105248317, 0.452355110389295, 0.45932867845763753, 0.4663508285319571, 0.4734220532472024, 0.4805428549479194, 0.48771374568997394, 0.4949352477676443, 0.5022078935989016, 0.5095322262104961, 0.5169087994013171, 0.5243381779462121, 0.531820938033258, 0.5393576673998429, 0.5469489655411571, 0.5545954440777171, 0.5622977272074909, 0.5700564517318241, 0.5778722675802677, 0.5857458379130999, 0.5936778397180665, 0.6016689640744456, 0.6097199163055267, 0.6178314166652016, 0.6260042005134107, 0.634239018729614, 0.642536638084546, 0.6508978418739978, 0.6593234302993748, 0.6678142204300485, 0.6763710473060502, 0.6849947641079126, 0.6936862426742377, 0.7024463741171422, 0.7112760690774352, 0.7201762586993197, 0.7291478946949884, 0.7381919504447205, 0.7473094213070144, 0.7565013251167617, 0.7657687030573498, 0.7751126204571981, 0.7845341727319787, 0.7940344754567392, 0.8036146699674589, 0.8132759243908643, 0.8230194346286163, 0.8328464254882276, 0.8427581507662703, 0.8527558947629239, 0.8628409728963032, 0.8730147330565072, 0.8832785560760192, 0.893633857372505, 0.90408208754203, 0.9146247338100205, 0.9252633209850635, 0.9359994127056858, 0.9468346131338875, 0.9577705677091615, 0.9688089646272973, 0.9799515368126887, 0.991200062658648, 1.0025563683857681, 1.01402232873809, 1.0255998695300321, 1.0372909689492442, 1.0490976597778348, 1.0610220308645557, 1.073066229448441, 1.0852324631016896, 1.0975230020498419, 1.109940181407601, 1.1224864038602798, 1.1351641414938205, 1.1479759391504523, 1.1609244168216977, 1.174012272571257, 1.1872422855734308, 1.2006173190061544, 1.2141403241004516, 1.2278143422355676, 1.2416425100955837, 1.2556280628430327, 1.2697743378301438, 1.2840847785716705, 1.2985629399332288, 1.313212492612692, 1.32803722673134, 1.3430410585732195, 1.3582280347623015, 1.3736023382962457, 1.3891682941605794, 1.4049303751875684, 1.4208932086098092, 1.437061583559942, 1.4534404568585582, 1.4700349612029477, 1.4868504119213393, 1.5038923168545044, 1.5211663820385322, 1.5386785226976814, 1.5564348715572267, 1.5744417888189972, 1.5927058706715909, 1.611233960381903, 1.6300331594360802, 1.6491108368428988, 1.6684746404059412, 1.6881325092882593, 1.7080926827899034, 1.7283637147035353, 1.7489544807724575, 1.769874192876707, 1.7911324071168409, 1.8127390329316833, 1.8347043428149759, 1.8570389769516265, 1.8797539492226905, 1.90286064958486, 1.9263708402516622, 1.9502966513247875, 1.974650568222991, 1.9994454151359677, 2.024694328589138, 2.0504107203337787, 2.0766082333764353, 2.103300679209953, 2.1305019623945016, 2.1582259872017793, 2.1864865480667257, 2.215297194496441, 2.2446710759907877, 2.2746207703652743, 2.3051580885365826, 2.3362938690345305, 2.3680377614151373, 2.4003980165937215, 2.4333812880733072, 2.466992470133586, 2.501234578755864, 2.536108696130112, 2.5716140017475833, 2.607747878504973, 2.644506121926528, 2.6818832196209814, 2.719872703471301, 2.7584675444550495, 2.7976605653233815, 2.837444838177793, 2.8778140508701884, 2.9187628204333915, 2.960286938219493, 3.002383551268897, 3.045051274690907, 3.0882902500986935, 3.1321021531360964, 3.176490164821093, 3.221458918726233, 3.267014428996826, 3.3131640110627463, 3.359916199568343, 3.4072806694423137, 3.455268159698282, 3.5038904045774935, 3.553160077032237, 3.6030907356062163, 3.6536967820684905, 3.7049934282014343, 3.7569966689375565, 3.809723263380634, 3.863190723711135, 3.9174173083468213, 3.9724220218002206, 4.028224619457117, 4.084845618897711, 4.142306309770192, 4.200628778177143, 4.2598359243047295, 4.319951491239162, 4.381000093446618, 4.443007252764169, 4.5059994350436146, 4.57000409378273, 4.63504971321656, 4.701165863783251, 4.768383252689632, 4.8367337896358915, 4.906250649893733, 4.976968349596809, 5.048922819886661, 5.122151501128075, 5.196693426527239, 5.272589335706917, 5.349881781472891, 5.42861525632693, 5.508836321331913, 5.590593759399132, 5.673938730787579, 5.758924956879597, 5.845608908319185, 5.934050022846345, 6.02431093104497, 6.116457721010854, 6.2105602115714555, 6.306692270010778, 6.404932153288765, 6.505362879650947, 6.6080726510585865, 6.713155296118467, 6.820710809653253, 6.930845881295425, 7.043674558019474, 7.159318917290081, 7.277909862477154, 7.399587983568036, 7.5245045398239965, 7.652822572619538, 7.784718113548779, 7.9203816158113955, 8.060019547191564, 8.203856159732977, 8.35213560560117, 8.505124268241982, 8.66311350019058, 8.826422771195132, 8.995403314637564, 9.17044238928943, 9.351968228840263, 9.54045592775647, 9.736434324322415, 9.940494264559252, 10.0], "xaxis": "x", "y": [0.0, 0.002234747156727068, 0.010032835772669689, 0.017666203154455808, 0.0251731361333496, 0.03255445707177072, 0.03981125058336164, 0.04694461870453864, 0.05395568045521344, 0.06084557060478357, 0.06761543881844195, 0.07426644750231956, 0.0807997714415425, 0.08721659626633899, 0.09351811712903844, 0.09970553785267217, 0.10578006975189676, 0.11174293093307046, 0.11759534511048646, 0.12333854068954443, 0.12897374991383487, 0.1345022082220264, 0.13992515322841462, 0.14524382422337537, 0.15045946120632459, 0.15557330444306194, 0.16058659362663846, 0.16550056731323332, 0.17031646240910528, 0.17503551376418025, 0.1796589531952573, 0.18418800932799745, 0.18862390712208008, 0.19296786738555247, 0.19722110624899514, 0.20138483489758566, 0.20546025911349183, 0.20944857909821468, 0.21335098873988703, 0.2171686757760674, 0.22090282114133816, 0.22455459902324953, 0.22812517613871142, 0.2316157119542708, 0.23502735825709234, 0.238361258832076, 0.24161854954296566, 0.24480035779003945, 0.24790780266859191, 0.25094199468726025, 0.2539040355827722, 0.25679501825239576, 0.2596160265443876, 0.26236813521889263, 0.2650524098482554, 0.26766990668460916, 0.2702216726182361, 0.2727087450033866, 0.27513215172412503, 0.27749291105941987, 0.27979203167090577, 0.2820305124812165, 0.284209342731376, 0.28632950184236444, 0.28839195955155683, 0.29039767569327507, 0.29234760037338425, 0.2942426737697338, 0.2960838262498775, 0.2978719784144697, 0.29960804099049926, 0.3012929148685419, 0.3029274911284324, 0.3045126510925088, 0.3060492662629729, 0.30753819840665053, 0.30898029956060535, 0.3103764120517737, 0.3117273685611817, 0.3130339921065094, 0.3142970961358771, 0.3155174844981648, 0.31669595154150476, 0.3178332821479889, 0.31893025173923545, 0.3199876263657013, 0.32100616272640653, 0.32198660823642455, 0.32292970106460417, 0.323836170184905, 0.3247067354470044, 0.32554210760311975, 0.32634298839946496, 0.3271100705920585, 0.327844038032582, 0.3285455657168269, 0.3292153198394543, 0.3298539578696399, 0.3304621285982082, 0.3310404721939568, 0.33158962027279926, 0.33211019597020064, 0.3326028139835308, 0.33306808064986226, 0.33350659399589344, 0.33391894381752374, 0.3343057117379353, 0.33466747126254653, 0.33500478785920174, 0.33531821901299885, 0.33560831429295096, 0.3358756154166885, 0.3361206563227772, 0.33634396323280574, 0.33654605470491633, 0.33672744171742897, 0.33688862772595896, 0.3370301087303383, 0.33715237334222564, 0.33725590284731666, 0.3373411712771066, 0.3374086454691715, 0.3374587851382152, 0.33749204293883805, 0.3375088645318979, 0.33750968865184394, 0.33749494717188494, 0.3374650651478228, 0.33742046090153244, 0.33736154609445274, 0.3372887257939524, 0.3372023985380183, 0.33710295639720955, 0.33699078504738295, 0.3368662638297066, 0.336729765819497, 0.3365816578864782, 0.33642230076743823, 0.3362520491227686, 0.3360712516090565, 0.3358802509391211, 0.3356793839508774, 0.33546898167227096, 0.3352493693778351, 0.3350208666646465, 0.33478378751581067, 0.3345384403537376, 0.33428512812116556, 0.33402414832832944, 0.3337557931387575, 0.33348034941465055, 0.3331980987922939, 0.33290931773777965, 0.33261427762270895, 0.3323132447814203, 0.33200648057965393, 0.3316942414762338, 0.33137677908934854, 0.3310543402541514, 0.33072716710510464, 0.33039549712222865, 0.33005956320524454, 0.3297195937375402, 0.32937581265074967, 0.32902843949694616, 0.32867768949485565, 0.3283237736310786, 0.32796689868640105, 0.32760726731843914, 0.3272450781352849, 0.32688052576755094, 0.3265138009150052, 0.32614509041746637, 0.32577457735393184, 0.32540244106893873, 0.32502885727031905, 0.32465399808756035, 0.3242780321481907, 0.32390112465571186, 0.3235234374587764, 0.3231451291068675, 0.3227663549552752, 0.32238726722251504, 0.32200801509058097, 0.3216287447440038, 0.321249599513655, 0.32087071991162913, 0.3204922437373857, 0.3201143061583143, 0.3197370398320099, 0.31936057498462583, 0.3189850395008012, 0.3186105590612759, 0.31823725725010327, 0.31786525564795565, 0.31749467400713494, 0.3171256303288244, 0.31675824107576217, 0.3163926212658383, 0.316028884679571, 0.31566714404618607, 0.315307511216432, 0.31495009741195423, 0.31459501343685603, 0.3142423699287201, 0.313892277676028, 0.31354484790356524, 0.31320019263013515, 0.31285842501906963, 0.31251965978919166, 0.3121840136711911, 0.31185160583553173, 0.3115225584215758, 0.31119699705141074, 0.31087505136234117, 0.3105568555013279, 0.31024254865150286, 0.3099322754832851, 0.30962618646390233, 0.3093244380728594, 0.30902719276711826, 0.3087346187074673, 0.3084468890948401, 0.3081641811333732, 0.30788667446929535, 0.3076145491769931, 0.3073479832597313, 0.30708714965898676, 0.30683221304617003, 0.306583326363278, 0.3063406275107964, 0.30610423627112504, 0.30587425173235183, 0.3056507503674006, 0.30543378490613, 0.30522338398303106, 0.3050195525435203, 0.30482227292993813, 0.304631506466884, 0.30444719543082366, 0.3042692652151568, 0.30409762658800726, 0.3039321779153735, 0.3037728072648247, 0.3036193943529946, 0.30347181229083825, 0.30332992912134055, 0.30319360914728166, 0.30306271407061197, 0.3029371039508614, 0.30281663799301345, 0.3027011752099478, 0.3025905749584481, 0.30248469737160205, 0.30238340370907346, 0.30228655663473564, 0.30219402043369453, 0.3021056611850327, 0.30202134689351473, 0.30194094759036444, 0.3018643354065427, 0.3017913846341066, 0.3017219717578503, 0.30165597548906736, 0.30159327678025943, 0.3015337588376127, 0.30147730712413795, 0.3014238093622563, 0.301373155530828, 0.3013252378642078, 0.3012799508439052, 0.3012371911969944, 0.3011968578872093, 0.30115885211186605, 0.30112307729530496, 0.3010894390870314, 0.3010578453540809, 0.3010282061827859, 0.3010004338716486, 0.3009744429321201, 0.300950150086132, 0.3009274742671037, 0.300906336617493, 0.30088666049000057, 0.30086837144532425, 0.3008513972528858, 0.3008356678885843, 0.3008211155343814, 0.3008076745740321, 0.3007952815905491, 0.30078387535976125, 0.300773396843688, 0.3007637891824686, 0.30075499768302894, 0.30074696980763865, 0.3007396551562433, 0.3007330054515768, 0.3007269745164996, 0.3007215182527852, 0.30071659461459754, 0.3007121635806748, 0.3007081871229358, 0.30070462917228935, 0.3007014555830617, 0.3006986340930015, 0.3006961342818362, 0.3006939275280594, 0.3006919869618561, 0.3006902874175037, 0.30068880538298454, 0.3006875189481101, 0.3006864077511205, 0.30068545292380916, 0.3006846370356445, 0.30068394403652254, 0.3006833591990033, 0.30068286905954705, 0.30068274541711393], "yaxis": "y"}, {"name": "B*", "type": "scatter", "x": [0.0, 0.001121135035472277, 0.005093373003210167, 0.009075287879972815, 0.013085709423220484, 0.017124588321242022, 0.021192003295500143, 0.025288035595435084, 0.029412769517554647, 0.03356629248709851, 0.037748695356332615, 0.041960071879406174, 0.046200519250114605, 0.05047013789936044, 0.05476903137129939, 0.059097306480164084, 0.06345507321973615, 0.06784244498144053, 0.07225953840280114, 0.07670647336647525, 0.0811833730168617, 0.08569036391910631, 0.0902275758908549, 0.09479514222513169, 0.09939319949844011, 0.104021887794556, 0.1086813505585563, 0.11337173465904217, 0.11809319047875036, 0.1228458720961385, 0.12762993686542637, 0.132445545775017, 0.13729286348444006, 0.14217205832194368, 0.1470833022014456, 0.15202677080315397, 0.15700264351864163, 0.16201110371020686, 0.1670523382558894, 0.17212653818883938, 0.17723389828841907, 0.18237461757613962, 0.1875488987229242, 0.19275694874503177, 0.19799897878422063, 0.20327520398376087, 0.20858584397848803, 0.21393112238123801, 0.21931126737162243, 0.22472651156783136, 0.23017709202006542, 0.23566325039709765, 0.24118523289413013, 0.24674329043947468, 0.25233767878124824, 0.25796865848610717, 0.26363649510904186, 0.2693414590548328, 0.2750838259559283, 0.2808638765947278, 0.28668189709012654, 0.2925381787971527, 0.2984330186432481, 0.3043667189436572, 0.31033958795114275, 0.31635193940304573, 0.32240409317623364, 0.32849637482621896, 0.33462911606073176, 0.34080265502285084, 0.3470173360503508, 0.3532735098832711, 0.35957153383557194, 0.3659117720789358, 0.37229459546072435, 0.3787203818831657, 0.3851895163705269, 0.3917023911739676, 0.3982594060777625, 0.40486096831486396, 0.4115074930093939, 0.41819940299401087, 0.4249371292758042, 0.43172111118751944, 0.438551796338418, 0.44542964105248317, 0.452355110389295, 0.45932867845763753, 0.4663508285319571, 0.4734220532472024, 0.4805428549479194, 0.48771374568997394, 0.4949352477676443, 0.5022078935989016, 0.5095322262104961, 0.5169087994013171, 0.5243381779462121, 0.531820938033258, 0.5393576673998429, 0.5469489655411571, 0.5545954440777171, 0.5622977272074909, 0.5700564517318241, 0.5778722675802677, 0.5857458379130999, 0.5936778397180665, 0.6016689640744456, 0.6097199163055267, 0.6178314166652016, 0.6260042005134107, 0.634239018729614, 0.642536638084546, 0.6508978418739978, 0.6593234302993748, 0.6678142204300485, 0.6763710473060502, 0.6849947641079126, 0.6936862426742377, 0.7024463741171422, 0.7112760690774352, 0.7201762586993197, 0.7291478946949884, 0.7381919504447205, 0.7473094213070144, 0.7565013251167617, 0.7657687030573498, 0.7751126204571981, 0.7845341727319787, 0.7940344754567392, 0.8036146699674589, 0.8132759243908643, 0.8230194346286163, 0.8328464254882276, 0.8427581507662703, 0.8527558947629239, 0.8628409728963032, 0.8730147330565072, 0.8832785560760192, 0.893633857372505, 0.90408208754203, 0.9146247338100205, 0.9252633209850635, 0.9359994127056858, 0.9468346131338875, 0.9577705677091615, 0.9688089646272973, 0.9799515368126887, 0.991200062658648, 1.0025563683857681, 1.01402232873809, 1.0255998695300321, 1.0372909689492442, 1.0490976597778348, 1.0610220308645557, 1.073066229448441, 1.0852324631016896, 1.0975230020498419, 1.109940181407601, 1.1224864038602798, 1.1351641414938205, 1.1479759391504523, 1.1609244168216977, 1.174012272571257, 1.1872422855734308, 1.2006173190061544, 1.2141403241004516, 1.2278143422355676, 1.2416425100955837, 1.2556280628430327, 1.2697743378301438, 1.2840847785716705, 1.2985629399332288, 1.313212492612692, 1.32803722673134, 1.3430410585732195, 1.3582280347623015, 1.3736023382962457, 1.3891682941605794, 1.4049303751875684, 1.4208932086098092, 1.437061583559942, 1.4534404568585582, 1.4700349612029477, 1.4868504119213393, 1.5038923168545044, 1.5211663820385322, 1.5386785226976814, 1.5564348715572267, 1.5744417888189972, 1.5927058706715909, 1.611233960381903, 1.6300331594360802, 1.6491108368428988, 1.6684746404059412, 1.6881325092882593, 1.7080926827899034, 1.7283637147035353, 1.7489544807724575, 1.769874192876707, 1.7911324071168409, 1.8127390329316833, 1.8347043428149759, 1.8570389769516265, 1.8797539492226905, 1.90286064958486, 1.9263708402516622, 1.9502966513247875, 1.974650568222991, 1.9994454151359677, 2.024694328589138, 2.0504107203337787, 2.0766082333764353, 2.103300679209953, 2.1305019623945016, 2.1582259872017793, 2.1864865480667257, 2.215297194496441, 2.2446710759907877, 2.2746207703652743, 2.3051580885365826, 2.3362938690345305, 2.3680377614151373, 2.4003980165937215, 2.4333812880733072, 2.466992470133586, 2.501234578755864, 2.536108696130112, 2.5716140017475833, 2.607747878504973, 2.644506121926528, 2.6818832196209814, 2.719872703471301, 2.7584675444550495, 2.7976605653233815, 2.837444838177793, 2.8778140508701884, 2.9187628204333915, 2.960286938219493, 3.002383551268897, 3.045051274690907, 3.0882902500986935, 3.1321021531360964, 3.176490164821093, 3.221458918726233, 3.267014428996826, 3.3131640110627463, 3.359916199568343, 3.4072806694423137, 3.455268159698282, 3.5038904045774935, 3.553160077032237, 3.6030907356062163, 3.6536967820684905, 3.7049934282014343, 3.7569966689375565, 3.809723263380634, 3.863190723711135, 3.9174173083468213, 3.9724220218002206, 4.028224619457117, 4.084845618897711, 4.142306309770192, 4.200628778177143, 4.2598359243047295, 4.319951491239162, 4.381000093446618, 4.443007252764169, 4.5059994350436146, 4.57000409378273, 4.63504971321656, 4.701165863783251, 4.768383252689632, 4.8367337896358915, 4.906250649893733, 4.976968349596809, 5.048922819886661, 5.122151501128075, 5.196693426527239, 5.272589335706917, 5.349881781472891, 5.42861525632693, 5.508836321331913, 5.590593759399132, 5.673938730787579, 5.758924956879597, 5.845608908319185, 5.934050022846345, 6.02431093104497, 6.116457721010854, 6.2105602115714555, 6.306692270010778, 6.404932153288765, 6.505362879650947, 6.6080726510585865, 6.713155296118467, 6.820710809653253, 6.930845881295425, 7.043674558019474, 7.159318917290081, 7.277909862477154, 7.399587983568036, 7.5245045398239965, 7.652822572619538, 7.784718113548779, 7.9203816158113955, 8.060019547191564, 8.203856159732977, 8.35213560560117, 8.505124268241982, 8.66311350019058, 8.826422771195132, 8.995403314637564, 9.17044238928943, 9.351968228840263, 9.54045592775647, 9.736434324322415, 9.940494264559252, 10.0], "xaxis": "x", "y": [0.0, 0.0011186249023893233, 0.005041839005278385, 0.008912544653305427, 0.012749149475493854, 0.01655128991671976, 0.020318742466497213, 0.024051300376422176, 0.027748773811639434, 0.03141098957298937, 0.03503779099857, 0.03862903714409535, 0.04218460289341905, 0.04570437841955496, 0.04918826872819138, 0.052636193435301216, 0.05604808634218417, 0.059423895256004854, 0.0627635815187458, 0.06606711966250485, 0.0693344970809615, 0.07256571380430414, 0.07576078203745358, 0.0789197259832613, 0.08204258137406138, 0.08512939529663237, 0.08818022576542588, 0.09119514144375282, 0.09417422138302774, 0.09711755481644004, 0.10002524058316639, 0.10289738704653578, 0.10573411180663171, 0.10853554139365962, 0.11130181092216568, 0.11403306390053503, 0.11672945190817077, 0.11939113444738748, 0.12201827841651111, 0.12461105817049985, 0.12716965502875435, 0.12969425725353187, 0.13218505948650786, 0.13464226282773603, 0.13706607446173627, 0.13945670734551474, 0.14181438017939907, 0.14413931692544293, 0.14643174682462332, 0.14869190409297922, 0.1509200276802896, 0.15311636111199964, 0.1552811522200836, 0.15741465299842677, 0.15951711940993052, 0.1615888111640313, 0.16362999156177138, 0.16564092723202686, 0.16762188805675055, 0.16957314693363862, 0.17149497963523638, 0.17338766457484134, 0.17525148271975058, 0.17708671733765757, 0.17889365397688137, 0.18067258013769089, 0.18242378528520642, 0.184147560531165, 0.18584419859551396, 0.18751399370566252, 0.18915724135519973, 0.19077423819252995, 0.1923652818995965, 0.1939306710985344, 0.1954707051442091, 0.19698568406022357, 0.1984759083979005, 0.19994167910810942, 0.2013832974600662, 0.20280106487432917, 0.20419528287415137, 0.20556625290365207, 0.20691427628607517, 0.2082396541144408, 0.20954268710686783, 0.21082367555943132, 0.21208291921875308, 0.21332071721194715, 0.21453736794124478, 0.21573316899531741, 0.21690841708740502, 0.21806340793626788, 0.21919843623517013, 0.22031379551794267, 0.22140977812282953, 0.22248667510560824, 0.2235447761614, 0.22458436958064518, 0.22560574216220505, 0.22660917913970907, 0.22759496413044433, 0.22856337909404836, 0.22951470423757608, 0.23044921798550444, 0.23136719689805582, 0.2322689156496509, 0.23315464696709173, 0.23402466155794885, 0.23487922809842837, 0.2357186131648079, 0.23654308119219272, 0.23735289442935506, 0.2381483129190654, 0.2389295944524927, 0.23969699448747037, 0.24045076617287092, 0.2411911602853384, 0.24191842519911547, 0.24263280686354363, 0.24333454875107577, 0.24402389186367263, 0.2447010746662235, 0.24536633310097697, 0.24601990054005013, 0.24666200775412234, 0.24729288290737292, 0.24791275154480116, 0.2485218369064149, 0.24912035920299047, 0.24970853593726747, 0.2502865819063815, 0.2508547091986225, 0.25141312719619585, 0.25196204251756793, 0.25250165904210486, 0.2530321778819744, 0.25355379739329625, 0.2540667131397938, 0.25457111791603027, 0.25506720171595315, 0.25555515174322097, 0.2560351523959481, 0.2565073852645221, 0.2569720291468677, 0.2574292600208776, 0.25787925104827947, 0.2583221725956858, 0.25875819220373203, 0.2591874746194324, 0.25961018176172906, 0.2600264727561209, 0.2604365039196569, 0.2608404287774726, 0.2612383980506501, 0.26163055967155957, 0.2620170587834448, 0.26239803774993764, 0.2627736361589964, 0.26314399083751827, 0.26350923583782637, 0.2638695024665706, 0.26422491928155867, 0.26457561210100267, 0.26492170401236265, 0.26526331537408765, 0.2656005638433169, 0.26593356435028975, 0.26626242914567794, 0.26658726779326, 0.2669081871727389, 0.26722529148491775, 0.26753868227905614, 0.26784845845840505, 0.2681547162632164, 0.26845754931513266, 0.26875704860172006, 0.2690533024941931, 0.26934639675052463, 0.26963641451787074, 0.26992343634205634, 0.2702075401869849, 0.27048880141679593, 0.27076729281431205, 0.27104308456756987, 0.271316244301134, 0.2715868370312704, 0.27185492520012844, 0.27212056865811124, 0.27238382466448824, 0.2726447478587269, 0.27290339026240074, 0.2731598012722711, 0.2734140276203598, 0.2736661133546465, 0.2739160998282534, 0.27416402563281667, 0.2744099265967661, 0.2746538356918382, 0.27489578301792295, 0.2751357957105426, 0.27537389786107036, 0.27561011044353845, 0.27584445118861506, 0.27607693447963894, 0.27630757121931604, 0.27653636864907494, 0.27676333018478605, 0.2769884551998005, 0.2772117388064252, 0.2774331715906377, 0.2776527393087231, 0.2778704225929048, 0.27808619657985445, 0.278300030536832, 0.27851188746188915, 0.2787217236941868, 0.2789294884872673, 0.27913512361524007, 0.2793385630560032, 0.2795397327212295, 0.2797385503392153, 0.27993492548740195, 0.2801287598820521, 0.28031994792290305, 0.2805083776057969, 0.2806939317691879, 0.28087648971158224, 0.28105592920065686, 0.2812321287020959, 0.28140496986343455, 0.28157433998675, 0.28174013443037355, 0.2819022587509653, 0.2820606304658318, 0.2822151803211146, 0.2823658530564684, 0.2825126076552314, 0.2826554171131072, 0.2827942678339389, 0.2829291587184856, 0.28306010007020016, 0.2831871123845385, 0.2833102251105787, 0.2834294754466022, 0.2835449071984797, 0.2836565697385864, 0.2837645170739774, 0.2838688070309574, 0.28396950054515097, 0.28406666105669504, 0.28416035400779055, 0.28425064641245984, 0.28433760650327694, 0.2844213034410462, 0.2845018070737394, 0.2845791877398902, 0.284653516109278, 0.2847248630498308, 0.2847932995197592, 0.2848588964781834, 0.2849217248126442, 0.2849818552717069, 0.2850393584180467, 0.28509430457654084, 0.2851467637952815, 0.28519680580607865, 0.2852444999907136, 0.2852899153459, 0.28533312045139547, 0.2853741834350436, 0.2854131719429474, 0.2854501531028336, 0.2854851934927768, 0.2855183591040896, 0.28554971530649126, 0.28557932680852005, 0.28560725762243017, 0.28563357102030107, 0.28565832949753583, 0.2856815947289831, 0.2857034275275968, 0.28572388779970803, 0.2857430345031835, 0.28576092560214544, 0.2857776180247275, 0.2857931676181195, 0.28580762910637353, 0.285821056046662, 0.2858335007892839, 0.2858450144363661, 0.28585564680454845, 0.28586544638830863, 0.2858744603251717, 0.2858827343646029, 0.28589031283771904, 0.28589723863367056, 0.28590355317429417, 0.2859092963970909, 0.2859145067378918, 0.28591922111969625, 0.28592347494394477, 0.2859273020864733, 0.28593073489747156, 0.28593380420413417, 0.2859365393189835, 0.2859389680510427, 0.28594111672018707, 0.2859430101767359, 0.2859446718230574, 0.2859461236393936, 0.285947386212641, 0.28594847876811125, 0.2859494192042086, 0.28595022412953636, 0.2859509089027659, 0.28595148767439194, 0.28595197343081136, 0.28595209607927985], "yaxis": "y"}, {"name": "AB*", "type": "scatter", "x": [0.0, 0.001121135035472277, 0.005093373003210167, 0.009075287879972815, 0.013085709423220484, 0.017124588321242022, 0.021192003295500143, 0.025288035595435084, 0.029412769517554647, 0.03356629248709851, 0.037748695356332615, 0.041960071879406174, 0.046200519250114605, 0.05047013789936044, 0.05476903137129939, 0.059097306480164084, 0.06345507321973615, 0.06784244498144053, 0.07225953840280114, 0.07670647336647525, 0.0811833730168617, 0.08569036391910631, 0.0902275758908549, 0.09479514222513169, 0.09939319949844011, 0.104021887794556, 0.1086813505585563, 0.11337173465904217, 0.11809319047875036, 0.1228458720961385, 0.12762993686542637, 0.132445545775017, 0.13729286348444006, 0.14217205832194368, 0.1470833022014456, 0.15202677080315397, 0.15700264351864163, 0.16201110371020686, 0.1670523382558894, 0.17212653818883938, 0.17723389828841907, 0.18237461757613962, 0.1875488987229242, 0.19275694874503177, 0.19799897878422063, 0.20327520398376087, 0.20858584397848803, 0.21393112238123801, 0.21931126737162243, 0.22472651156783136, 0.23017709202006542, 0.23566325039709765, 0.24118523289413013, 0.24674329043947468, 0.25233767878124824, 0.25796865848610717, 0.26363649510904186, 0.2693414590548328, 0.2750838259559283, 0.2808638765947278, 0.28668189709012654, 0.2925381787971527, 0.2984330186432481, 0.3043667189436572, 0.31033958795114275, 0.31635193940304573, 0.32240409317623364, 0.32849637482621896, 0.33462911606073176, 0.34080265502285084, 0.3470173360503508, 0.3532735098832711, 0.35957153383557194, 0.3659117720789358, 0.37229459546072435, 0.3787203818831657, 0.3851895163705269, 0.3917023911739676, 0.3982594060777625, 0.40486096831486396, 0.4115074930093939, 0.41819940299401087, 0.4249371292758042, 0.43172111118751944, 0.438551796338418, 0.44542964105248317, 0.452355110389295, 0.45932867845763753, 0.4663508285319571, 0.4734220532472024, 0.4805428549479194, 0.48771374568997394, 0.4949352477676443, 0.5022078935989016, 0.5095322262104961, 0.5169087994013171, 0.5243381779462121, 0.531820938033258, 0.5393576673998429, 0.5469489655411571, 0.5545954440777171, 0.5622977272074909, 0.5700564517318241, 0.5778722675802677, 0.5857458379130999, 0.5936778397180665, 0.6016689640744456, 0.6097199163055267, 0.6178314166652016, 0.6260042005134107, 0.634239018729614, 0.642536638084546, 0.6508978418739978, 0.6593234302993748, 0.6678142204300485, 0.6763710473060502, 0.6849947641079126, 0.6936862426742377, 0.7024463741171422, 0.7112760690774352, 0.7201762586993197, 0.7291478946949884, 0.7381919504447205, 0.7473094213070144, 0.7565013251167617, 0.7657687030573498, 0.7751126204571981, 0.7845341727319787, 0.7940344754567392, 0.8036146699674589, 0.8132759243908643, 0.8230194346286163, 0.8328464254882276, 0.8427581507662703, 0.8527558947629239, 0.8628409728963032, 0.8730147330565072, 0.8832785560760192, 0.893633857372505, 0.90408208754203, 0.9146247338100205, 0.9252633209850635, 0.9359994127056858, 0.9468346131338875, 0.9577705677091615, 0.9688089646272973, 0.9799515368126887, 0.991200062658648, 1.0025563683857681, 1.01402232873809, 1.0255998695300321, 1.0372909689492442, 1.0490976597778348, 1.0610220308645557, 1.073066229448441, 1.0852324631016896, 1.0975230020498419, 1.109940181407601, 1.1224864038602798, 1.1351641414938205, 1.1479759391504523, 1.1609244168216977, 1.174012272571257, 1.1872422855734308, 1.2006173190061544, 1.2141403241004516, 1.2278143422355676, 1.2416425100955837, 1.2556280628430327, 1.2697743378301438, 1.2840847785716705, 1.2985629399332288, 1.313212492612692, 1.32803722673134, 1.3430410585732195, 1.3582280347623015, 1.3736023382962457, 1.3891682941605794, 1.4049303751875684, 1.4208932086098092, 1.437061583559942, 1.4534404568585582, 1.4700349612029477, 1.4868504119213393, 1.5038923168545044, 1.5211663820385322, 1.5386785226976814, 1.5564348715572267, 1.5744417888189972, 1.5927058706715909, 1.611233960381903, 1.6300331594360802, 1.6491108368428988, 1.6684746404059412, 1.6881325092882593, 1.7080926827899034, 1.7283637147035353, 1.7489544807724575, 1.769874192876707, 1.7911324071168409, 1.8127390329316833, 1.8347043428149759, 1.8570389769516265, 1.8797539492226905, 1.90286064958486, 1.9263708402516622, 1.9502966513247875, 1.974650568222991, 1.9994454151359677, 2.024694328589138, 2.0504107203337787, 2.0766082333764353, 2.103300679209953, 2.1305019623945016, 2.1582259872017793, 2.1864865480667257, 2.215297194496441, 2.2446710759907877, 2.2746207703652743, 2.3051580885365826, 2.3362938690345305, 2.3680377614151373, 2.4003980165937215, 2.4333812880733072, 2.466992470133586, 2.501234578755864, 2.536108696130112, 2.5716140017475833, 2.607747878504973, 2.644506121926528, 2.6818832196209814, 2.719872703471301, 2.7584675444550495, 2.7976605653233815, 2.837444838177793, 2.8778140508701884, 2.9187628204333915, 2.960286938219493, 3.002383551268897, 3.045051274690907, 3.0882902500986935, 3.1321021531360964, 3.176490164821093, 3.221458918726233, 3.267014428996826, 3.3131640110627463, 3.359916199568343, 3.4072806694423137, 3.455268159698282, 3.5038904045774935, 3.553160077032237, 3.6030907356062163, 3.6536967820684905, 3.7049934282014343, 3.7569966689375565, 3.809723263380634, 3.863190723711135, 3.9174173083468213, 3.9724220218002206, 4.028224619457117, 4.084845618897711, 4.142306309770192, 4.200628778177143, 4.2598359243047295, 4.319951491239162, 4.381000093446618, 4.443007252764169, 4.5059994350436146, 4.57000409378273, 4.63504971321656, 4.701165863783251, 4.768383252689632, 4.8367337896358915, 4.906250649893733, 4.976968349596809, 5.048922819886661, 5.122151501128075, 5.196693426527239, 5.272589335706917, 5.349881781472891, 5.42861525632693, 5.508836321331913, 5.590593759399132, 5.673938730787579, 5.758924956879597, 5.845608908319185, 5.934050022846345, 6.02431093104497, 6.116457721010854, 6.2105602115714555, 6.306692270010778, 6.404932153288765, 6.505362879650947, 6.6080726510585865, 6.713155296118467, 6.820710809653253, 6.930845881295425, 7.043674558019474, 7.159318917290081, 7.277909862477154, 7.399587983568036, 7.5245045398239965, 7.652822572619538, 7.784718113548779, 7.9203816158113955, 8.060019547191564, 8.203856159732977, 8.35213560560117, 8.505124268241982, 8.66311350019058, 8.826422771195132, 8.995403314637564, 9.17044238928943, 9.351968228840263, 9.54045592775647, 9.736434324322415, 9.940494264559252, 10.0], "xaxis": "x", "y": [0.0, 9.350062718927526e-10, 8.620883457263392e-08, 4.795421936068324e-07, 1.4136080810339562e-06, 3.1150929604233046e-06, 5.8047297826665916e-06, 9.697254984776453e-06, 1.5001380799492129e-05, 2.191977584238549e-05, 3.06490542112873e-05, 4.137977058870195e-05, 5.4296424441526904e-05, 6.957746967424725e-05, 8.739533036041094e-05, 0.00010791642339954031, 0.00013130118592341377, 0.00015770410958206767, 0.00018727377804186884, 0.0002201529096743077, 0.00025647840469502313, 0.0002963813977002171, 0.0003399873113905487, 0.0003874159172111463, 0.0004387813954388399, 0.0004941924024585574, 0.0005537521369497209, 0.0006175584107591449, 0.0006857037227503525, 0.0007582753365735566, 0.0008353553512483805, 0.0009170207847886978, 0.0010033436552329405, 0.0010943910623881573, 0.001190225269055905, 0.0012909037882519597, 0.0013964794670325619, 0.0015070005777406367, 0.0016225108943896999, 0.001743049793554465, 0.001868652332497104, 0.001999349348722013, 0.002135167532958268, 0.002276129534499338, 0.002422254043828309, 0.0025735558766202147, 0.002730046075074396, 0.0028917319803015524, 0.0030586173363351026, 0.003230702373133334, 0.0034079838922305137, 0.003590455358032772, 0.00377810697947187, 0.003970925800783383, 0.004168895787867088, 0.004371997910728935, 0.00458021023113637, 0.004793507978150285, 0.005011863641713812, 0.005235247048676937, 0.0054636254476769985, 0.0056969635818416185, 0.005935223777550353, 0.006178366011463527, 0.006426348006199652, 0.006679125283905802, 0.0069366512643515964, 0.007198877315208628, 0.0074657528403476265, 0.007737225359547204, 0.00801324056400643, 0.00829374238983776, 0.008578673088893388, 0.00886797330356013, 0.0091615821190782, 0.009459437139967608, 0.009761474551031667, 0.01006762917864719, 0.010377834560196635, 0.010692022993772803, 0.011010125611411552, 0.01133207242125254, 0.011657792379244698, 0.011987213444579868, 0.012320262623901752, 0.012656866037759475, 0.012996948965418038, 0.013340435902539676, 0.013687250607817565, 0.014037316152018569, 0.014390554973274903, 0.014746888913760279, 0.015106239281004538, 0.015468526875914141, 0.0158336720491745, 0.016201594740238735, 0.01657221451688704, 0.016945450625001295, 0.017321222021874014, 0.017699447411692125, 0.01808004528751561, 0.0184629339759956, 0.01884803165942771, 0.019235256421174463, 0.01962452626865872, 0.020015759179385185, 0.02040887312896151, 0.020803786112226552, 0.021200416189157648, 0.021598681504123616, 0.021998500315372708, 0.022399791020985185, 0.02280247219594965, 0.023206462615329902, 0.02361168125603308, 0.024018047351730906, 0.024425480401367772, 0.02483390019283375, 0.025243226829584, 0.025653380738804736, 0.026064282711542895, 0.02647585389885438, 0.026888015854226885, 0.027300690537769828, 0.027713800327682985, 0.028127268046904588, 0.028541016984268214, 0.028954971138838458, 0.02936905476240283, 0.029783192591181323, 0.03019730987043612, 0.03061133237476522, 0.031025186432264318, 0.03143879890256078, 0.03185209721360271, 0.03226500935834893, 0.032677463920034094, 0.033089390059153206, 0.0335007175459846, 0.033911376748452265, 0.03432129865220018, 0.03473041485860201, 0.03513865759212391, 0.03554595972198213, 0.03595225474559361, 0.03635747679751425, 0.03676156067338808, 0.03716444180602224, 0.03756605629770251, 0.03796634088996815, 0.038365232996470454, 0.038762670688617766, 0.03915859271012973, 0.039552938462911476, 0.03994564801862601, 0.040336662114026964, 0.04072592215527629, 0.04111337021587887, 0.041498949044846224, 0.04188260204485972, 0.04226427329369086, 0.04264390753168607, 0.04302145016141523, 0.043396847246309746, 0.043770045500937466, 0.04414099230906128, 0.044509635682811945, 0.04487592430140092, 0.04523980748953434, 0.045601235206204904, 0.04596015803558583, 0.04631652720279929, 0.04667029456501611, 0.04702141257632666, 0.047369834322556814, 0.047715513487657596, 0.04805840435798985, 0.04839846180986033, 0.04873564129628572, 0.04906989884212201, 0.04940119105109264, 0.04972947506975718, 0.05005470859417568, 0.0503768498399147, 0.050695857565022755, 0.051011691004884216, 0.051324309900314606, 0.051633674466247385, 0.05193974538298538, 0.052242483754893515, 0.05254185110645062, 0.05283780936987576, 0.05313032083686938, 0.05341934813697649, 0.053704854228482375, 0.05398680232880121, 0.054265155922940386, 0.054539878671956886, 0.0548109344154455, 0.05507828709225296, 0.05534190068270237, 0.05560173916557104, 0.0558577664252713, 0.05610994619352094, 0.05635824196982703, 0.05660261690391351, 0.05684303371089573, 0.05707945454682498, 0.05731184090175445, 0.057540153464956, 0.05776435197521254, 0.057984395107223065, 0.05820024030876039, 0.05841184366879475, 0.058619159794823246, 0.05882214173690693, 0.05902074091344823, 0.0592149071077492, 0.05940458857369094, 0.05958973221608758, 0.05977028393655464, 0.05994618912744268, 0.060117393392851, 0.060283843469284726, 0.06044548841586957, 0.06060228100839859, 0.060754179333216175, 0.060901148559835826, 0.06104316271540363, 0.06118020646608768, 0.061312276675278596, 0.06143938369513224, 0.06156155226004961, 0.06167882192255399, 0.06179124699002315, 0.061898896007555076, 0.062001850831885995, 0.062100205371541345, 0.062194064114139504, 0.06228354052090415, 0.06236875539740819, 0.062449835299129786, 0.06252691103619427, 0.06260011631538497, 0.06266958653126509, 0.06273545772028123, 0.06279786567140906, 0.06285694518527836, 0.06291282946337731, 0.0629656496159041, 0.06301553427595727, 0.06306260929426145, 0.06310699750928862, 0.06314881857824962, 0.06318818885612028, 0.0632252213155084, 0.06326002549970726, 0.06329270750031685, 0.06332336995635557, 0.06335211206951731, 0.0633790296330607, 0.0634042150678329, 0.06342775747091149, 0.06344974266510063, 0.06347025325624053, 0.06348936869217918, 0.06350716532553112, 0.06352371647714142, 0.06353909250172803, 0.06355336085322841, 0.06356658615264159, 0.06357883025404051, 0.06359015231290996, 0.06360060885291673, 0.06361025383379497, 0.06361913871804117, 0.06362731253924334, 0.06363482196798227, 0.06364171138010333, 0.06364802292294705, 0.06365379658240182, 0.06365907024906087, 0.06366387978511157, 0.06366825909021186, 0.06367224016794917, 0.06367585319134923, 0.06367912656869415, 0.0636820870085183, 0.06368475958489273, 0.06368716780173385, 0.06368933365718289, 0.06369127770718673, 0.06369301912843639, 0.06369457578087546, 0.06369596426908426, 0.06369720000350078, 0.0636982972597841, 0.06369926923802967, 0.0637001281201504, 0.06370088512645213, 0.06370155057064011, 0.06370213391353165, 0.06370264381525921, 0.06370308818569262, 0.06370347423345536, 0.06370380851304727, 0.0637040969700954, 0.06370434498497766, 0.06370455741435398, 0.06370473863090027, 0.06370489256107718, 0.06370502272095518, 0.06370513225011443, 0.06370522394359777, 0.06370530028200194, 0.06370536345965985, 0.06370541541102738, 0.06370542835741634], "yaxis": "y"}, {"name": "TOF", "type": "scatter", "x": [0.0, 0.001121135035472277, 0.005093373003210167, 0.009075287879972815, 0.013085709423220484, 0.017124588321242022, 0.021192003295500143, 0.025288035595435084, 0.029412769517554647, 0.03356629248709851, 0.037748695356332615, 0.041960071879406174, 0.046200519250114605, 0.05047013789936044, 0.05476903137129939, 0.059097306480164084, 0.06345507321973615, 0.06784244498144053, 0.07225953840280114, 0.07670647336647525, 0.0811833730168617, 0.08569036391910631, 0.0902275758908549, 0.09479514222513169, 0.09939319949844011, 0.104021887794556, 0.1086813505585563, 0.11337173465904217, 0.11809319047875036, 0.1228458720961385, 0.12762993686542637, 0.132445545775017, 0.13729286348444006, 0.14217205832194368, 0.1470833022014456, 0.15202677080315397, 0.15700264351864163, 0.16201110371020686, 0.1670523382558894, 0.17212653818883938, 0.17723389828841907, 0.18237461757613962, 0.1875488987229242, 0.19275694874503177, 0.19799897878422063, 0.20327520398376087, 0.20858584397848803, 0.21393112238123801, 0.21931126737162243, 0.22472651156783136, 0.23017709202006542, 0.23566325039709765, 0.24118523289413013, 0.24674329043947468, 0.25233767878124824, 0.25796865848610717, 0.26363649510904186, 0.2693414590548328, 0.2750838259559283, 0.2808638765947278, 0.28668189709012654, 0.2925381787971527, 0.2984330186432481, 0.3043667189436572, 0.31033958795114275, 0.31635193940304573, 0.32240409317623364, 0.32849637482621896, 0.33462911606073176, 0.34080265502285084, 0.3470173360503508, 0.3532735098832711, 0.35957153383557194, 0.3659117720789358, 0.37229459546072435, 0.3787203818831657, 0.3851895163705269, 0.3917023911739676, 0.3982594060777625, 0.40486096831486396, 0.4115074930093939, 0.41819940299401087, 0.4249371292758042, 0.43172111118751944, 0.438551796338418, 0.44542964105248317, 0.452355110389295, 0.45932867845763753, 0.4663508285319571, 0.4734220532472024, 0.4805428549479194, 0.48771374568997394, 0.4949352477676443, 0.5022078935989016, 0.5095322262104961, 0.5169087994013171, 0.5243381779462121, 0.531820938033258, 0.5393576673998429, 0.5469489655411571, 0.5545954440777171, 0.5622977272074909, 0.5700564517318241, 0.5778722675802677, 0.5857458379130999, 0.5936778397180665, 0.6016689640744456, 0.6097199163055267, 0.6178314166652016, 0.6260042005134107, 0.634239018729614, 0.642536638084546, 0.6508978418739978, 0.6593234302993748, 0.6678142204300485, 0.6763710473060502, 0.6849947641079126, 0.6936862426742377, 0.7024463741171422, 0.7112760690774352, 0.7201762586993197, 0.7291478946949884, 0.7381919504447205, 0.7473094213070144, 0.7565013251167617, 0.7657687030573498, 0.7751126204571981, 0.7845341727319787, 0.7940344754567392, 0.8036146699674589, 0.8132759243908643, 0.8230194346286163, 0.8328464254882276, 0.8427581507662703, 0.8527558947629239, 0.8628409728963032, 0.8730147330565072, 0.8832785560760192, 0.893633857372505, 0.90408208754203, 0.9146247338100205, 0.9252633209850635, 0.9359994127056858, 0.9468346131338875, 0.9577705677091615, 0.9688089646272973, 0.9799515368126887, 0.991200062658648, 1.0025563683857681, 1.01402232873809, 1.0255998695300321, 1.0372909689492442, 1.0490976597778348, 1.0610220308645557, 1.073066229448441, 1.0852324631016896, 1.0975230020498419, 1.109940181407601, 1.1224864038602798, 1.1351641414938205, 1.1479759391504523, 1.1609244168216977, 1.174012272571257, 1.1872422855734308, 1.2006173190061544, 1.2141403241004516, 1.2278143422355676, 1.2416425100955837, 1.2556280628430327, 1.2697743378301438, 1.2840847785716705, 1.2985629399332288, 1.313212492612692, 1.32803722673134, 1.3430410585732195, 1.3582280347623015, 1.3736023382962457, 1.3891682941605794, 1.4049303751875684, 1.4208932086098092, 1.437061583559942, 1.4534404568585582, 1.4700349612029477, 1.4868504119213393, 1.5038923168545044, 1.5211663820385322, 1.5386785226976814, 1.5564348715572267, 1.5744417888189972, 1.5927058706715909, 1.611233960381903, 1.6300331594360802, 1.6491108368428988, 1.6684746404059412, 1.6881325092882593, 1.7080926827899034, 1.7283637147035353, 1.7489544807724575, 1.769874192876707, 1.7911324071168409, 1.8127390329316833, 1.8347043428149759, 1.8570389769516265, 1.8797539492226905, 1.90286064958486, 1.9263708402516622, 1.9502966513247875, 1.974650568222991, 1.9994454151359677, 2.024694328589138, 2.0504107203337787, 2.0766082333764353, 2.103300679209953, 2.1305019623945016, 2.1582259872017793, 2.1864865480667257, 2.215297194496441, 2.2446710759907877, 2.2746207703652743, 2.3051580885365826, 2.3362938690345305, 2.3680377614151373, 2.4003980165937215, 2.4333812880733072, 2.466992470133586, 2.501234578755864, 2.536108696130112, 2.5716140017475833, 2.607747878504973, 2.644506121926528, 2.6818832196209814, 2.719872703471301, 2.7584675444550495, 2.7976605653233815, 2.837444838177793, 2.8778140508701884, 2.9187628204333915, 2.960286938219493, 3.002383551268897, 3.045051274690907, 3.0882902500986935, 3.1321021531360964, 3.176490164821093, 3.221458918726233, 3.267014428996826, 3.3131640110627463, 3.359916199568343, 3.4072806694423137, 3.455268159698282, 3.5038904045774935, 3.553160077032237, 3.6030907356062163, 3.6536967820684905, 3.7049934282014343, 3.7569966689375565, 3.809723263380634, 3.863190723711135, 3.9174173083468213, 3.9724220218002206, 4.028224619457117, 4.084845618897711, 4.142306309770192, 4.200628778177143, 4.2598359243047295, 4.319951491239162, 4.381000093446618, 4.443007252764169, 4.5059994350436146, 4.57000409378273, 4.63504971321656, 4.701165863783251, 4.768383252689632, 4.8367337896358915, 4.906250649893733, 4.976968349596809, 5.048922819886661, 5.122151501128075, 5.196693426527239, 5.272589335706917, 5.349881781472891, 5.42861525632693, 5.508836321331913, 5.590593759399132, 5.673938730787579, 5.758924956879597, 5.845608908319185, 5.934050022846345, 6.02431093104497, 6.116457721010854, 6.2105602115714555, 6.306692270010778, 6.404932153288765, 6.505362879650947, 6.6080726510585865, 6.713155296118467, 6.820710809653253, 6.930845881295425, 7.043674558019474, 7.159318917290081, 7.277909862477154, 7.399587983568036, 7.5245045398239965, 7.652822572619538, 7.784718113548779, 7.9203816158113955, 8.060019547191564, 8.203856159732977, 8.35213560560117, 8.505124268241982, 8.66311350019058, 8.826422771195132, 8.995403314637564, 9.17044238928943, 9.351968228840263, 9.54045592775647, 9.736434324322415, 9.940494264559252, 10.0], "xaxis": "x2", "y": [0.0, 9.350062718927526e-10, 8.620883457263392e-08, 4.795421936068324e-07, 1.4136080810339562e-06, 3.1150929604233046e-06, 5.8047297826665916e-06, 9.697254984776453e-06, 1.5001380799492129e-05, 2.191977584238549e-05, 3.06490542112873e-05, 4.137977058870195e-05, 5.4296424441526904e-05, 6.957746967424725e-05, 8.739533036041094e-05, 0.00010791642339954031, 0.00013130118592341377, 0.00015770410958206767, 0.00018727377804186884, 0.0002201529096743077, 0.00025647840469502313, 0.0002963813977002171, 0.0003399873113905487, 0.0003874159172111463, 0.0004387813954388399, 0.0004941924024585574, 0.0005537521369497209, 0.0006175584107591449, 0.0006857037227503525, 0.0007582753365735566, 0.0008353553512483805, 0.0009170207847886978, 0.0010033436552329405, 0.0010943910623881573, 0.001190225269055905, 0.0012909037882519597, 0.0013964794670325619, 0.0015070005777406367, 0.0016225108943896999, 0.001743049793554465, 0.001868652332497104, 0.001999349348722013, 0.002135167532958268, 0.002276129534499338, 0.002422254043828309, 0.0025735558766202147, 0.002730046075074396, 0.0028917319803015524, 0.0030586173363351026, 0.003230702373133334, 0.0034079838922305137, 0.003590455358032772, 0.00377810697947187, 0.003970925800783383, 0.004168895787867088, 0.004371997910728935, 0.00458021023113637, 0.004793507978150285, 0.005011863641713812, 0.005235247048676937, 0.0054636254476769985, 0.0056969635818416185, 0.005935223777550353, 0.006178366011463527, 0.006426348006199652, 0.006679125283905802, 0.0069366512643515964, 0.007198877315208628, 0.0074657528403476265, 0.007737225359547204, 0.00801324056400643, 0.00829374238983776, 0.008578673088893388, 0.00886797330356013, 0.0091615821190782, 0.009459437139967608, 0.009761474551031667, 0.01006762917864719, 0.010377834560196635, 0.010692022993772803, 0.011010125611411552, 0.01133207242125254, 0.011657792379244698, 0.011987213444579868, 0.012320262623901752, 0.012656866037759475, 0.012996948965418038, 0.013340435902539676, 0.013687250607817565, 0.014037316152018569, 0.014390554973274903, 0.014746888913760279, 0.015106239281004538, 0.015468526875914141, 0.0158336720491745, 0.016201594740238735, 0.01657221451688704, 0.016945450625001295, 0.017321222021874014, 0.017699447411692125, 0.01808004528751561, 0.0184629339759956, 0.01884803165942771, 0.019235256421174463, 0.01962452626865872, 0.020015759179385185, 0.02040887312896151, 0.020803786112226552, 0.021200416189157648, 0.021598681504123616, 0.021998500315372708, 0.022399791020985185, 0.02280247219594965, 0.023206462615329902, 0.02361168125603308, 0.024018047351730906, 0.024425480401367772, 0.02483390019283375, 0.025243226829584, 0.025653380738804736, 0.026064282711542895, 0.02647585389885438, 0.026888015854226885, 0.027300690537769828, 0.027713800327682985, 0.028127268046904588, 0.028541016984268214, 0.028954971138838458, 0.02936905476240283, 0.029783192591181323, 0.03019730987043612, 0.03061133237476522, 0.031025186432264318, 0.03143879890256078, 0.03185209721360271, 0.03226500935834893, 0.032677463920034094, 0.033089390059153206, 0.0335007175459846, 0.033911376748452265, 0.03432129865220018, 0.03473041485860201, 0.03513865759212391, 0.03554595972198213, 0.03595225474559361, 0.03635747679751425, 0.03676156067338808, 0.03716444180602224, 0.03756605629770251, 0.03796634088996815, 0.038365232996470454, 0.038762670688617766, 0.03915859271012973, 0.039552938462911476, 0.03994564801862601, 0.040336662114026964, 0.04072592215527629, 0.04111337021587887, 0.041498949044846224, 0.04188260204485972, 0.04226427329369086, 0.04264390753168607, 0.04302145016141523, 0.043396847246309746, 0.043770045500937466, 0.04414099230906128, 0.044509635682811945, 0.04487592430140092, 0.04523980748953434, 0.045601235206204904, 0.04596015803558583, 0.04631652720279929, 0.04667029456501611, 0.04702141257632666, 0.047369834322556814, 0.047715513487657596, 0.04805840435798985, 0.04839846180986033, 0.04873564129628572, 0.04906989884212201, 0.04940119105109264, 0.04972947506975718, 0.05005470859417568, 0.0503768498399147, 0.050695857565022755, 0.051011691004884216, 0.051324309900314606, 0.051633674466247385, 0.05193974538298538, 0.052242483754893515, 0.05254185110645062, 0.05283780936987576, 0.05313032083686938, 0.05341934813697649, 0.053704854228482375, 0.05398680232880121, 0.054265155922940386, 0.054539878671956886, 0.0548109344154455, 0.05507828709225296, 0.05534190068270237, 0.05560173916557104, 0.0558577664252713, 0.05610994619352094, 0.05635824196982703, 0.05660261690391351, 0.05684303371089573, 0.05707945454682498, 0.05731184090175445, 0.057540153464956, 0.05776435197521254, 0.057984395107223065, 0.05820024030876039, 0.05841184366879475, 0.058619159794823246, 0.05882214173690693, 0.05902074091344823, 0.0592149071077492, 0.05940458857369094, 0.05958973221608758, 0.05977028393655464, 0.05994618912744268, 0.060117393392851, 0.060283843469284726, 0.06044548841586957, 0.06060228100839859, 0.060754179333216175, 0.060901148559835826, 0.06104316271540363, 0.06118020646608768, 0.061312276675278596, 0.06143938369513224, 0.06156155226004961, 0.06167882192255399, 0.06179124699002315, 0.061898896007555076, 0.062001850831885995, 0.062100205371541345, 0.062194064114139504, 0.06228354052090415, 0.06236875539740819, 0.062449835299129786, 0.06252691103619427, 0.06260011631538497, 0.06266958653126509, 0.06273545772028123, 0.06279786567140906, 0.06285694518527836, 0.06291282946337731, 0.0629656496159041, 0.06301553427595727, 0.06306260929426145, 0.06310699750928862, 0.06314881857824962, 0.06318818885612028, 0.0632252213155084, 0.06326002549970726, 0.06329270750031685, 0.06332336995635557, 0.06335211206951731, 0.0633790296330607, 0.0634042150678329, 0.06342775747091149, 0.06344974266510063, 0.06347025325624053, 0.06348936869217918, 0.06350716532553112, 0.06352371647714142, 0.06353909250172803, 0.06355336085322841, 0.06356658615264159, 0.06357883025404051, 0.06359015231290996, 0.06360060885291673, 0.06361025383379497, 0.06361913871804117, 0.06362731253924334, 0.06363482196798227, 0.06364171138010333, 0.06364802292294705, 0.06365379658240182, 0.06365907024906087, 0.06366387978511157, 0.06366825909021186, 0.06367224016794917, 0.06367585319134923, 0.06367912656869415, 0.0636820870085183, 0.06368475958489273, 0.06368716780173385, 0.06368933365718289, 0.06369127770718673, 0.06369301912843639, 0.06369457578087546, 0.06369596426908426, 0.06369720000350078, 0.0636982972597841, 0.06369926923802967, 0.0637001281201504, 0.06370088512645213, 0.06370155057064011, 0.06370213391353165, 0.06370264381525921, 0.06370308818569262, 0.06370347423345536, 0.06370380851304727, 0.0637040969700954, 0.06370434498497766, 0.06370455741435398, 0.06370473863090027, 0.06370489256107718, 0.06370502272095518, 0.06370513225011443, 0.06370522394359777, 0.06370530028200194, 0.06370536345965985, 0.06370541541102738, 0.06370542835741634], "yaxis": "y2"}],                        {"template": {"data": {"bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}}, "type": "bar"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}}, "type": "barpolar"}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "choropleth": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "choropleth"}], "contour": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "contour"}], "contourcarpet": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "contourcarpet"}], "heatmap": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "heatmap"}], "heatmapgl": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "heatmapgl"}], "histogram": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "histogram"}], "histogram2d": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "histogram2d"}], "histogram2dcontour": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "histogram2dcontour"}], "mesh3d": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "type": "mesh3d"}], "parcoords": [{"line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "parcoords"}], "pie": [{"automargin": true, "type": "pie"}], "scatter": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatter"}], "scatter3d": [{"line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatter3d"}], "scattercarpet": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattercarpet"}], "scattergeo": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattergeo"}], "scattergl": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattergl"}], "scattermapbox": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scattermapbox"}], "scatterpolar": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterpolar"}], "scatterpolargl": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterpolargl"}], "scatterternary": [{"marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "type": "scatterternary"}], "surface": [{"colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "type": "surface"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}]}, "layout": {"plot_bgcolor": "white", "showlegend": true, "title": {"font": {"family": "Rockwell", "size": 24}}, "xaxis": {"linecolor": "rgb(204, 204, 204)", "linewidth": 2, "rangemode": "tozero", "showgrid": false, "showline": true, "showticklabels": true, "tickcolor": "rgb(204, 204, 204)", "tickfont": {"color": "rgb(82, 82, 82)", "family": "Arial", "size": 12}, "ticks": "outside"}, "yaxis": {"linecolor": "rgb(204, 204, 204)", "linewidth": 2, "rangemode": "tozero", "showgrid": false, "showline": true, "showticklabels": true, "tickcolor": "rgb(204, 204, 204)", "tickfont": {"color": "rgb(82, 82, 82)", "family": "Arial", "size": 12}, "ticks": "outside"}}}, "xaxis": {"anchor": "y", "domain": [0.0, 0.45], "title": {"text": "Time"}}, "xaxis2": {"anchor": "y2", "domain": [0.55, 1.0], "title": {"text": "Time"}}, "yaxis": {"anchor": "x", "domain": [0.0, 1.0], "title": {"text": "Coverage"}}, "yaxis2": {"anchor": "x2", "domain": [0.0, 1.0], "title": {"text": "TOF"}}},                        {"responsive": true}                    ).then(function(){
-                            
-var gd = document.getElementById('0e85d6ed-aa17-4001-9d29-c0aa69d76b5e');
-var x = new MutationObserver(function (mutations, observer) {{
-        var display = window.getComputedStyle(gd).display;
-        if (!display || display === 'none') {{
-            console.log([gd, 'removed!']);
-            Plotly.purge(gd);
-            observer.disconnect();
-        }}
-}});
-
-// Listen for the removal of the full notebook cells
-var notebookContainer = gd.closest('#notebook-container');
-if (notebookContainer) {{
-    x.observe(notebookContainer, {childList: true});
-}}
-
-// Listen for the clearing of the current output cell
-var outputEl = gd.closest('.output');
-if (outputEl) {{
-    x.observe(outputEl, {childList: true});
-}}
-
-                        })                };                });            </script>        </div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pio</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s1">&#39;testi.plotly&#39;</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fig_styled</span> <span class="o">=</span> <span class="n">pio</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="s1">&#39;testi.plotly&#39;</span><span class="p">)</span>
-<span class="n">fig_styled</span>
+<span class="c1"># Save the plot as an interactive html file for later use</span>
+<span class="n">pio</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s1">&#39;fig1.html&#39;</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13478,7 +14491,7 @@ if (outputEl) {{
     scrolling="no"
     width="100%"
     height="545px"
-    src="exp.html"
+    src="fig1.html"
     frameborder="0"
     allowfullscreen
 ></iframe>
@@ -13491,35 +14504,17 @@ if (outputEl) {{
 </div>
 
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pio</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="n">fig_styled</span><span class="p">,</span> <span class="s1">&#39;exp.html&#39;</span><span class="p">)</span>
-</pre></div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Just to make sure that everything behaves correctly, let's try multiplying the reaction constants by 10. As expected, it neither affected the steady-state coverage nor the TOF of the reaction (as the forward and backward reaction cancels each other out) but we reached steady-state much faster.</p>
 
-    </div>
 </div>
 </div>
-
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">torkel</span><span class="o">.</span><span class="vm">__dict__</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">k</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
@@ -13527,27 +14522,65 @@ if (outputEl) {{
      <span class="p">]</span>
 <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
 
-<span class="n">torkel</span><span class="o">.</span><span class="n">react_const</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+<span class="n">test_model</span><span class="o">.</span><span class="n">react_const</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
 
 <span class="n">t0</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">tf</span> <span class="o">=</span> <span class="mi">10</span>
 
-<span class="n">ans</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">solve_ivp</span><span class="p">(</span><span class="n">torkel</span><span class="o">.</span><span class="n">reaction</span><span class="p">,</span> 
+<span class="n">ans</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">solve_ivp</span><span class="p">(</span><span class="n">test_model</span><span class="o">.</span><span class="n">reaction</span><span class="p">,</span> 
                                 <span class="p">[</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">],</span> 
                                 <span class="n">x0</span><span class="p">,</span>
                                 <span class="n">rtol</span><span class="o">=</span><span class="n">RelTol</span><span class="p">,</span> 
                                 <span class="n">atol</span><span class="o">=</span><span class="n">AbsTol</span><span class="p">,</span>
                                 <span class="p">)</span>
 
-<span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">torkel</span><span class="o">.</span><span class="n">reaction</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">ans</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">test_model</span><span class="o">.</span><span class="n">reaction</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">ans</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
 
-<span class="n">plotty</span><span class="p">(</span><span class="n">ans</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">ans</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">variables</span><span class="p">[:(</span><span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0_press</span><span class="p">))],</span> <span class="n">r</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="c1"># Plot the data</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plotty</span><span class="p">(</span><span class="n">ans</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">ans</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">variables</span><span class="p">[:(</span><span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0_press</span><span class="p">))],</span> <span class="n">r</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># Save the plot as an interactive html file for later use</span>
+<span class="n">pio</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s1">&#39;fig2.html&#39;</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<iframe
+    scrolling="no"
+    width="100%"
+    height="545px"
+    src="fig2.html"
+    frameborder="0"
+    allowfullscreen
+></iframe>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="For-now,-ignore-the-code-that-follows-this-figure,-simply-WIP-stuff-such-as-functions-which-produces-a-modulation-signal.">For now, ignore the code that follows this figure, simply WIP stuff such as functions which produces a modulation signal.<a class="anchor-link" href="#For-now,-ignore-the-code-that-follows-this-figure,-simply-WIP-stuff-such-as-functions-which-produces-a-modulation-signal.">&#182;</a></h2>
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
