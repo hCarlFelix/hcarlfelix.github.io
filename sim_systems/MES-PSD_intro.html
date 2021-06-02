@@ -1,0 +1,683 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PSD analysis of different cases of (simulated) reaction systems &#8212; Simple surface reaction simulations</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/togglebutton.js"></script>
+    <script src="_static/clipboard.min.js"></script>
+    <script src="_static/copybutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <script async="async" src="https://unpkg.com/thebelab@latest/lib/index.js"></script>
+    <script >
+        const thebe_selector = ".thebe"
+        const thebe_selector_input = "pre"
+        const thebe_selector_output = ".output"
+    </script>
+    <script async="async" src="_static/sphinx-thebe.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["\\(", "\\)"]], "displayMath": [["\\[", "\\]"]], "processRefs": false, "processEnvironments": false}})</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Basic generator for a function describing a MKM reaction system" href="DefiningModel.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="index.html">
+      
+      <img src="_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Simple surface reaction simulations</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="modelintro.html">
+   Revealing reaction behaviour by modulation
+  </a>
+ </li>
+</ul>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="DefiningModel.html">
+   Basic generator for a function describing a MKM reaction system
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   PSD analysis of different cases of (simulated) reaction systems
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Powered by <a href="https://jupyterbook.org">Jupyter Book</a>
+</div>
+
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="_sources/MES-PSD_intro.ipynb"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.ipynb</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/hCarlFelix/hcarlfelix.github.io/sim_systems"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        <a class="issues-button"
+            href="https://github.com/hCarlFelix/hcarlfelix.github.io/sim_systems/issues/new?title=Issue%20on%20page%20%2FMES-PSD_intro.html&body=Your%20issue%20content%20here."><button
+                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
+                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Launch interactive content"><i class="fas fa-rocket"></i></button>
+    <div class="dropdown-buttons">
+        
+        <a class="binder-button" href="https://mybinder.org/v2/gh/hCarlFelix/hcarlfelix.github.io/master?urlpath=tree/docs/MES-PSD_intro.ipynb"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Launch Binder" data-toggle="tooltip"
+                data-placement="left"><img class="binder-button-logo"
+                    src="_static/images/logo_binder.svg"
+                    alt="Interact on binder">Binder</button></a>
+        
+        
+        
+        
+    </div>
+</div>
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#the-basics-linear-reactions">
+   The basics, linear reactions
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#only-one-desorption-step">
+     Only one desorption step
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#adding-variation-to-modulate-variables">
+   Adding variation - To modulate variables
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#testing-psd">
+   Testing PSD
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="psd-analysis-of-different-cases-of-simulated-reaction-systems">
+<h1>PSD analysis of different cases of (simulated) reaction systems<a class="headerlink" href="#psd-analysis-of-different-cases-of-simulated-reaction-systems" title="Permalink to this headline">¶</a></h1>
+<p>Some introductionary text…</p>
+<div class="section" id="the-basics-linear-reactions">
+<h2>The basics, linear reactions<a class="headerlink" href="#the-basics-linear-reactions" title="Permalink to this headline">¶</a></h2>
+<p>Let’s start with the obligatory import of modules we need.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="k">import</span> <span class="n">odeint</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">signal</span>
+
+<span class="c1"># Plotting stuff</span>
+<span class="kn">import</span> <span class="nn">plotly</span>
+<span class="kn">import</span> <span class="nn">plotly.graph_objs</span> <span class="k">as</span> <span class="nn">go</span>
+<span class="kn">import</span> <span class="nn">plotly.io</span> <span class="k">as</span> <span class="nn">pio</span>
+<span class="kn">from</span> <span class="nn">plotly.subplots</span> <span class="k">import</span> <span class="n">make_subplots</span>
+
+<span class="n">pio</span><span class="o">.</span><span class="n">renderers</span><span class="o">.</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;iframe&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We’ll also need the previously defined <code class="docutils literal notranslate"><span class="pre">BasicReactionModel</span></code> class and <code class="docutils literal notranslate"><span class="pre">constr_stoichio</span></code> function who will construct our system of differential equations (<code class="docutils literal notranslate"><span class="pre">BasicReactionModel</span></code>) and construct a stoichiometry matrix (<code class="docutils literal notranslate"><span class="pre">constr_stoichio</span></code>). These ones have been stored in a module <code class="docutils literal notranslate"><span class="pre">ModelStuff</span></code>.</p>
+<p>I’ve also defined a template (<code class="docutils literal notranslate"><span class="pre">PlotStuff</span></code>) for how I want to the data to be plotted, resulting in a macro named <code class="docutils literal notranslate"><span class="pre">plotty</span></code> for plotting the data.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ModelStuff</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">PlotStuff</span> <span class="k">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="only-one-desorption-step">
+<h3>Only one desorption step<a class="headerlink" href="#only-one-desorption-step" title="Permalink to this headline">¶</a></h3>
+<p>To begin, let’s look at the following reaction system:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{align}
+    A_2 &amp;\rightarrow 2A^*\\
+    B + * &amp;\rightarrow B*\\
+    A^* + B^* &amp;\rightarrow AB^* + *\\
+    AB^* &amp;\rightarrow AB + *
+\end{align}
+\end{split}\]</div>
+<p>A simple linear reaction scheme, with three adsorption/desorption steps and one surface reaction between two different adsorbates. We’ll define the differential equation system by first defining a stoichiometry matrix for the reaction system by the use of <code class="docutils literal notranslate"><span class="pre">constr_stoichio</span></code>. Given this stoichiometry matrix, we can later on define the ODE system by the use of <code class="docutils literal notranslate"><span class="pre">BasicReactionModel</span></code>.</p>
+<p>For this first example, we’ll set all reaction constants to be equal (1) except the re-adsorption of AB which we will prohibit by setting its reaction constant (<code class="docutils literal notranslate"><span class="pre">k[1,</span> <span class="pre">-1]</span></code>) to 0. Furthermore, we’ll set the partial pressures as constant (<code class="docutils literal notranslate"><span class="pre">constant_term</span> <span class="pre">=</span> <span class="pre">True</span></code> for variables corresponding to pressures) and the initial condition as a clean surface and that we only have one kind of adsorption site.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">reactions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;A2 + 2* -&gt; 2A*&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;B + * -&gt; B*&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;A* + B* -&gt; AB* + *&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;AB* -&gt; AB + *&quot;</span><span class="p">,</span>
+             <span class="p">]</span>
+
+<span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;A*&quot;</span><span class="p">,</span> <span class="s2">&quot;B*&quot;</span><span class="p">,</span> <span class="s2">&quot;AB*&quot;</span><span class="p">,</span> <span class="s2">&quot;A2&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;AB&quot;</span><span class="p">]</span>
+
+<span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">reactions</span><span class="p">)]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">x0_sites</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">x0_surfS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+<span class="n">x0_press</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+
+<span class="n">x0</span> <span class="o">=</span> <span class="n">x0_sites</span> <span class="o">+</span> <span class="n">x0_surfS</span> <span class="o">+</span> <span class="n">x0_press</span>
+
+<span class="n">constant_term</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x0_sites</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0_surfS</span><span class="p">))</span> <span class="o">+</span> \
+                <span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0_press</span><span class="p">)</span>
+
+<span class="n">constant_term</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="n">stoichi</span> <span class="o">=</span> <span class="n">constr_stoichio</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">reactions</span><span class="p">)</span>
+
+<span class="n">test_model</span> <span class="o">=</span> <span class="n">BasicReactionModel</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                                <span class="n">stoichi</span><span class="o">=</span><span class="n">stoichi</span><span class="p">,</span>
+                                <span class="n">const_term</span><span class="o">=</span><span class="n">constant_term</span><span class="p">,</span>
+                                <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>So, we are now ready to solve the differential equation system. For this, we’ll use SciPy’s solve_ivp function (using the default Runge-Kutta 45 method).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Time span</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">tf</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="c1"># Error tolerance</span>
+<span class="n">res</span> <span class="o">=</span> <span class="mf">1.0e-12</span>
+<span class="n">AbsTol</span> <span class="o">=</span> <span class="p">[</span><span class="n">res</span><span class="p">]</span> <span class="o">*</span> <span class="n">test_model</span><span class="o">.</span><span class="n">stoichi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">RelTol</span> <span class="o">=</span> <span class="n">res</span>
+
+<span class="n">ans</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">solve_ivp</span><span class="p">(</span><span class="n">test_model</span><span class="o">.</span><span class="n">reaction</span><span class="p">,</span> 
+                                <span class="p">[</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">],</span> 
+                                <span class="n">x0</span><span class="p">,</span>
+                                <span class="n">rtol</span><span class="o">=</span><span class="n">RelTol</span><span class="p">,</span> 
+                                <span class="n">atol</span><span class="o">=</span><span class="n">AbsTol</span><span class="p">,</span>
+                                <span class="p">)</span>
+
+<span class="c1"># Net reaction rate for each step</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">test_model</span><span class="o">.</span><span class="n">reaction</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">ans</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+<span class="c1"># Plot the data</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plotty</span><span class="p">(</span><span class="n">ans</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">ans</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">variables</span><span class="p">[:(</span><span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0_press</span><span class="p">))],</span> <span class="n">r</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># Save the plot as an interactive html file for later use</span>
+<span class="n">pio</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s1">&#39;fig1.html&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><iframe
+    scrolling="no"
+    width="100%"
+    height="545px"
+    src="_sources/fig1.html"
+    frameborder="0"
+    allowfullscreen
+></iframe>
+</div></div>
+</div>
+<p>Just to make sure that everything behaves correctly, let’s try multiplying the reaction constants by 10. As expected, it neither affected the steady-state coverage nor the TOF of the reaction (as the forward and backward reaction cancels each other out) but we reached steady-state much faster.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">k</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
+     <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+     <span class="p">]</span>
+<span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+<span class="n">test_model</span><span class="o">.</span><span class="n">react_const</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+<span class="n">t0</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">tf</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="n">ans</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">solve_ivp</span><span class="p">(</span><span class="n">test_model</span><span class="o">.</span><span class="n">reaction</span><span class="p">,</span> 
+                                <span class="p">[</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">],</span> 
+                                <span class="n">x0</span><span class="p">,</span>
+                                <span class="n">rtol</span><span class="o">=</span><span class="n">RelTol</span><span class="p">,</span> 
+                                <span class="n">atol</span><span class="o">=</span><span class="n">AbsTol</span><span class="p">,</span>
+                                <span class="p">)</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">test_model</span><span class="o">.</span><span class="n">reaction</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">ans</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+<span class="c1"># Plot the data</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plotty</span><span class="p">(</span><span class="n">ans</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">ans</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">variables</span><span class="p">[:(</span><span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0_press</span><span class="p">))],</span> <span class="n">r</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># Save the plot as an interactive html file for later use</span>
+<span class="n">pio</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s1">&#39;fig2.html&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><iframe
+    scrolling="no"
+    width="100%"
+    height="545px"
+    src="_sources/fig2.html"
+    frameborder="0"
+    allowfullscreen
+></iframe>
+</div></div>
+</div>
+</div>
+</div>
+<div class="section" id="adding-variation-to-modulate-variables">
+<h2>Adding variation - To modulate variables<a class="headerlink" href="#adding-variation-to-modulate-variables" title="Permalink to this headline">¶</a></h2>
+<p>So, having laid the groundwork with by setting up the differential equations for the reaction system, let’s move on to the modulation function. Below we have the function <code class="docutils literal notranslate"><span class="pre">stim_sin</span></code> which will allow us to modulate one or more input variables to the ODE solver by the use of a sinusoidal function. Furthermore, it will overwrite the value of the modulated variable while maintaining it as a constant for each loop of the ODE function, ergo we can still prohibit the ODE solver from changing it’s value while still adding a modulation function.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">stim_sin</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Varies one or more input arguments to a function func with a sinus function.</span>
+<span class="sd">    </span>
+<span class="sd">    Its intended use is to add a stimulus function to a function to be solved by</span>
+<span class="sd">    ODE solver.</span>
+<span class="sd">    </span>
+<span class="sd">    func : function</span>
+<span class="sd">        function describing the ODE system. func(t, x)</span>
+<span class="sd">    c : list</span>
+<span class="sd">        The coefficient and constant term of the sinus function.</span>
+<span class="sd">        x[0] = c[0, 0] * np.sin(c[0, 1] * t + c[0, 2]) + c[0, 3]</span>
+<span class="sd">        If c[i, 0] = 0, then x[i] = x[i]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">term</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span> <span class="n">term</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="n">term</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Except asking for the <code class="docutils literal notranslate"><span class="pre">t</span></code> and <code class="docutils literal notranslate"><span class="pre">x</span></code> variables (used by the ODE solver), <code class="docutils literal notranslate"><span class="pre">stim_sin</span></code> also asks for the ODE function which will be modulated (in this case it is our <code class="docutils literal notranslate"><span class="pre">test_model.reaction</span></code>) and a couple of constants for the sinus function.</p>
+<br>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{align}
+    f(x) &amp;= A \, \sin \left(\frac{2 \pi}{\tau} \, t + \varphi \right) + C\\
+    f(x) &amp;= x_1 \, \sin \left(x_2 \, t + x_3 \right) + x_4
+\end{align}
+\end{split}\]</div>
+<br>
+<p>Let’s perform a sine modulation on the H<span class="math notranslate nohighlight">\(_2\)</span> gas. As <code class="docutils literal notranslate"><span class="pre">stim_sin</span></code> function will override the initial value for modulated variable, we’ll need to define the constants of the sinus function such that our maximum partial pressure will be that of  <span class="math notranslate nohighlight">\(x_0\)</span>(H<span class="math notranslate nohighlight">\(_2\)</span>). So, as the sine can only give [-1, 1], we simply need to fulfill the conditions of <span class="math notranslate nohighlight">\(x_1+x_4=x_0\)</span>(H<span class="math notranslate nohighlight">\(_2\)</span>) and <span class="math notranslate nohighlight">\(-x_1+x_4&gt;0\)</span>. In this example, we’ll let the H<span class="math notranslate nohighlight">\(_2\)</span> partial pressure oscillate between 0 and 1, and as such we’ll set <span class="math notranslate nohighlight">\(x_1=0.5\)</span> and <span class="math notranslate nohighlight">\(x_4=0.5\)</span>.</p>
+<blockquote>
+<div><p>Note: While ignoring the initial value, <code class="docutils literal notranslate"><span class="pre">stim_sin</span></code> will not affect the value at <span class="math notranslate nohighlight">\(t_0\)</span> as it is assigned by the ODE solver. As such, there might be cases in which a solution can not be obtained due to a potential dramatic shift, it is therefore advisable to set the starting condition to equal the sine function at <span class="math notranslate nohighlight">\(t_0\)</span>.</p>
+</div></blockquote>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">period</span> <span class="o">=</span> <span class="mf">0.5</span><span class="c1">#0.637 # Equal to TOF at steady-state</span>
+<span class="n">stim_const</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="n">stim_const</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">stim_const</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">period</span>
+<span class="n">stim_const</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span> <span class="c1"># Phase delay correction, start at sin(...) = 1</span>
+<span class="n">stim_const</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+<span class="n">tf</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">period</span>
+
+<span class="n">ans_sin</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">solve_ivp</span><span class="p">(</span><span class="n">stim_sin</span><span class="p">,</span>
+                                    <span class="p">[</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">],</span> 
+                                    <span class="n">x0</span><span class="p">,</span>
+                                    <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">test_model</span><span class="o">.</span><span class="n">reaction</span><span class="p">,</span> 
+                                          <span class="n">stim_const</span><span class="p">,</span>
+                                          <span class="p">],</span>
+                                    <span class="n">rtol</span><span class="o">=</span><span class="n">RelTol</span><span class="p">,</span> 
+                                    <span class="n">atol</span><span class="o">=</span><span class="n">AbsTol</span><span class="p">,</span>
+                                    <span class="p">)</span>
+
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">test_model</span><span class="o">.</span><span class="n">reaction</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">ans_sin</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plotty</span><span class="p">(</span><span class="n">ans_sin</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">ans_sin</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">variables</span><span class="p">[:(</span><span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0_press</span><span class="p">))],</span> <span class="n">r</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><iframe
+    scrolling="no"
+    width="100%"
+    height="545px"
+    src="_sources/fig3.html"
+    frameborder="0"
+    allowfullscreen
+></iframe>
+</div></div>
+</div>
+<p>Another modulation that could be performed (experimentally much more easily) is the square wave modulation. One benefit about this is the possibility of studying several frequencies from one single experiment, the importance of this will be discussed in the PSD section later on. For now, let’s define a function for this square wave modulation using the <code class="docutils literal notranslate"><span class="pre">square</span></code> function from <code class="docutils literal notranslate"><span class="pre">scipy.signal</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">signal</span>
+
+<span class="k">def</span> <span class="nf">stim_square</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Varies one or more input arguments to a function func with a square wave </span>
+<span class="sd">    function.</span>
+<span class="sd">    </span>
+<span class="sd">    Its intended use is to add a stimulus function to a function to be solved by</span>
+<span class="sd">    ODE solver.</span>
+<span class="sd">    </span>
+<span class="sd">    func : function</span>
+<span class="sd">        function describing the ODE system. func(t, x)</span>
+<span class="sd">    const : list</span>
+<span class="sd">        The coefficient and constant term of the sinus function.</span>
+<span class="sd">        x[0] = c[0, 0] * signal.square(c[0, 1] * t + c[0, 2]) + c[0, 3]</span>
+<span class="sd">        If const[i, 0] = 0, then x_stim[i] = x[i]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">term</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">const</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">signal</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span> <span class="n">term</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="n">term</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The behaviour of this square wave is a bit different than the sine function so we’ll also change the modulation parameters and then finally perform the calculation and plot.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">stim_const</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">stim_const</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">period</span>
+<span class="n">stim_const</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">stim_const</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">ans_square</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">solve_ivp</span><span class="p">(</span><span class="n">stim_sin</span><span class="p">,</span>
+                                       <span class="p">[</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">],</span> 
+                                       <span class="n">x0</span><span class="p">,</span>
+                                       <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">test_model</span><span class="o">.</span><span class="n">reaction</span><span class="p">,</span> 
+                                             <span class="n">stim_const</span><span class="p">,</span>
+                                             <span class="p">],</span>
+                                       <span class="n">rtol</span><span class="o">=</span><span class="n">RelTol</span><span class="p">,</span> 
+                                       <span class="n">atol</span><span class="o">=</span><span class="n">AbsTol</span><span class="p">,</span>
+                                       <span class="p">)</span>
+
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">test_model</span><span class="o">.</span><span class="n">reaction</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">ans_square</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plotty</span><span class="p">(</span><span class="n">ans_square</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">ans_square</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">variables</span><span class="p">[:(</span><span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0_press</span><span class="p">))],</span> <span class="n">r</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><iframe
+    scrolling="no"
+    width="100%"
+    height="545px"
+    src="_sources/fig4.html"
+    frameborder="0"
+    allowfullscreen
+></iframe>
+</div></div>
+</div>
+<p>We could then play around with different rate constants and modulation periods and see how the system responds. Keep in mind though that we are ignoring mass transfer limitations, as such the obtained responses by this simulation at high frequencies can differ dramatically from reality due to mass transfer becoming significant.</p>
+</div>
+<div class="section" id="testing-psd">
+<h2>Testing PSD<a class="headerlink" href="#testing-psd" title="Permalink to this headline">¶</a></h2>
+<p>We have now reached the state in which we can produce a simulated reaction system. Let us now try out phase sensitive detection (PSD) on one of these systems. For this example, let’s limit the analysis to the usage of the PSD equation (given below) and not involve any in depth analysis using Fourier transform or such.</p>
+<div class="math notranslate nohighlight">
+\[
+A(\phi^\text{PSD}) = \frac{2}{T} \int^T_0 A(t) \sin(\omega t + \phi^\text{PSD}) \text{d}t
+\]</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">PSD</span> <span class="k">import</span> <span class="n">psd_demodulation</span> <span class="k">as</span> <span class="n">demodulation</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">start_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">ans_sin</span><span class="o">.</span><span class="n">t</span> <span class="o">-</span> <span class="n">period</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="n">demod_sine</span> <span class="o">=</span> <span class="n">demodulation</span><span class="p">(</span><span class="n">ans_sin</span><span class="o">.</span><span class="n">y</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">x0_press</span><span class="p">),</span> <span class="n">start_t</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> 
+                          <span class="n">ans_sin</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">start_t</span><span class="p">:],</span> 
+                          <span class="n">period</span><span class="p">,</span> 
+                          <span class="n">kArr</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">]))</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plot_psd</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">360</span><span class="p">)],</span> 
+               <span class="n">demod_sine</span><span class="p">,</span> 
+               <span class="n">variables</span><span class="p">[:(</span><span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0_press</span><span class="p">))],</span> 
+               <span class="n">demod_sine</span><span class="p">,</span>
+               <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><iframe
+    scrolling="no"
+    width="100%"
+    height="545px"
+    src="_sources/fig5.html"
+    frameborder="0"
+    allowfullscreen
+></iframe>
+</div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">start_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">ans_square</span><span class="o">.</span><span class="n">t</span> <span class="o">-</span> <span class="n">period</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="n">demod_square</span> <span class="o">=</span> <span class="n">demodulation</span><span class="p">(</span><span class="n">ans_square</span><span class="o">.</span><span class="n">y</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">x0_press</span><span class="p">),</span> <span class="n">start_t</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> 
+                            <span class="n">ans_square</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">start_t</span><span class="p">:],</span> 
+                            <span class="n">period</span><span class="p">,</span> 
+                            <span class="n">kArr</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)]),</span>
+                            <span class="n">modtype</span><span class="o">=</span><span class="s1">&#39;SW&#39;</span><span class="p">)</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plot_psd</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">360</span><span class="p">)],</span> 
+               <span class="n">demod_square</span><span class="p">,</span> 
+               <span class="n">variables</span><span class="p">[:(</span><span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0_press</span><span class="p">))],</span> 
+               <span class="n">demod_square</span><span class="p">,</span>
+               <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><iframe
+    scrolling="no"
+    width="100%"
+    height="545px"
+    src="_sources/fig6.html"
+    frameborder="0"
+    allowfullscreen
+></iframe>
+</div></div>
+</div>
+</div>
+</div>
+</div>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "myenv"
+        },
+        kernelOptions: {
+            kernelName: "myenv",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'myenv'</script>
+
+              </div>
+              
+        
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="DefiningModel.html" title="previous page">Basic generator for a function describing a MKM reaction system</a>
+
+        </div>
+        
+        </div>
+    </div>
+    <footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+          By Felix Hemmingsson<br/>
+        
+            &copy; Copyright 2020.<br/>
+      </p>
+    </div>
+  </footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>
